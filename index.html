@@ -1018,29 +1018,34 @@ function parseXLSX(file, kind){
         if(kind==='po'){
           const sn = wb.SheetNames.includes('总表')? '总表' : wb.SheetNames[0];
           const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,blankrows:false});
+          // 列名归一化：去全角/半角空格、转小写，避免「供应商 」「供应商　」等尾空格或全角差异导致匹配失败
+          const norm=s=>{ if(s==null) return ''; return String(s).replace(/[　\xa0\s]/g,'').toLowerCase(); };
           const fields=[
-            {k:'supplier', labels:['供应商','供应商名称']},
-            {k:'month',    labels:['月份','月份','交货月份']},
-            {k:'received', labels:['累计收料数量','累计收料','已收料']},
-            {k:'remaining',labels:['剩余收料数量','剩余收料','剩余']},
-            {k:'purchase', labels:['采购数量','采购']},
-            {k:'spu',      labels:['SPU','四位物料编码','物料前四位']},
-            {k:'materialCode',labels:['物料编码','物料号']},
-            {k:'materialName',labels:['物料名称','品名']},
-            {k:'deliveryDate', labels:['交货日期','交期','计划交货日期']},
-            {k:'bizClose', labels:['业务关闭','状态','订单状态']},
-            {k:'poNo',     labels:['单据编号','采购订单编号','采购订单号']},
+            {k:'supplier', labels:['供应商','供应商名称','供货商','供应厂商']},
+            {k:'month',    labels:['月份','交货月份','交期月份']},
+            {k:'received', labels:['累计收料数量','累计收料','已收料','已收数量','累计收货数量','收货数量']},
+            {k:'remaining',labels:['剩余收料数量','剩余收料','剩余','未收数量','剩余数量']},
+            {k:'purchase', labels:['采购数量','采购','下单数量','计划数量','订购数量']},
+            {k:'spu',      labels:['SPU','四位物料编码','物料前四位','物料前4位']},
+            {k:'materialCode',labels:['物料编码','物料号','料号']},
+            {k:'materialName',labels:['物料名称','品名','名称','物料名']},
+            {k:'deliveryDate', labels:['交货日期','交期','计划交货日期','计划交期','到货日期','交货期']},
+            {k:'bizClose', labels:['业务关闭','状态','订单状态','关闭']},
+            {k:'poNo',     labels:['单据编号','采购订单编号','采购订单号','订单编号','采购单号','po号','po单号']},
             {k:'lineTag',  labels:['产线标签','产线']},
             {k:'timeTag',  labels:['时效标签','时效']},
-            {k:'docType',  labels:['单据类型']},
-            {k:'creator',  labels:['创建人']},
+            {k:'docType',  labels:['单据类型','单据种类','订单类型']},
+            {k:'creator',  labels:['创建人','制单人','建单人']},
           ];
-          let hi=-1,hm={};
-          for(let i=0;i<Math.min(rows.length,25);i++){ const row=rows[i]||[]; const m={}; let hit=0;
-            for(const f of fields){ for(const lab of f.labels){ const c=row.indexOf(lab); if(c>=0){ m[f.k]=c; hit++; break; } } }
-            if(hit>=4){hi=i;hm=m;break;} }
-          if(hi<0) return reject(new Error('未找到标准表头(供应商/收料/采购)，请检查表头是否含“供应商”“累计收料数量”“剩余收料数量”“采购数量”'));
-          if(hm.supplier==null||hm.received==null||hm.remaining==null||hm.purchase==null) return reject(new Error('缺少必要列：供应商、累计收料数量、剩余收料数量、采购数量'));
+          const normFields=fields.map(f=>({k:f.k, set:new Set(f.labels.map(norm))}));
+          // 表头识别：扫描前40行，取「列名命中数最多」的一行作为表头（列顺序任意、容错更强）
+          let hi=-1,hm={},bestHit=0;
+          for(let i=0;i<Math.min(rows.length,40);i++){ const row=rows[i]||[]; const m={}; const seen={}; let hit=0;
+            for(let ci=0;ci<row.length;ci++){ const c=norm(row[ci]); if(!c) continue;
+              for(const f of normFields){ if(seen[f.k]==null && f.set.has(c)){ m[f.k]=ci; seen[f.k]=1; hit++; break; } } }
+            if(hit>bestHit){ bestHit=hit; hi=i; hm=m; if(hit>=8) break; } }
+          if(hi<0) return reject(new Error('未找到标准表头（前40行未匹配到足够列名）。请确认表头含“供应商/累计收料数量/剩余收料数量/采购数量”，且表头位于前40行内'));
+          if(hm.supplier==null||hm.received==null||hm.remaining==null||hm.purchase==null) return reject(new Error('缺少必要列：供应商、累计收料数量、剩余收料数量、采购数量（仅匹配到 '+bestHit+' 列）。请核对表头列名是否与模板一致'));
           const num=v=>{ if(v==null||v==='')return 0; const n=parseFloat(v); return isNaN(n)?0:n; };
           const four=v=>{ if(!v) return ''; const mm=String(v).match(/\d{4}/); return mm?mm[0]:''; };
           const hasBiz = hm.bizClose!=null;
@@ -1060,7 +1065,9 @@ function parseXLSX(file, kind){
             creator:(hm.creator!=null?row[hm.creator]:'')||''});
           }
           DATA.po=out; DATA.meta.poRows=out.length;
-          resolve(`订单已更新：${out.length} 行`);
+          const missingOpt=fields.filter(f=>!['supplier','received','remaining','purchase'].includes(f.k) && hm[f.k]==null).map(f=>f.labels[0]);
+          const warn=missingOpt.length? '（未匹配到列：'+missingOpt.join('、')+'，已按空处理）':'';
+          resolve(`订单已更新：${out.length} 行${warn}`);
         } else {
           const sn = wb.SheetNames.includes('Sheet1')? 'Sheet1' : wb.SheetNames[0];
           const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,blankrows:false});

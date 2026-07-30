@@ -1511,7 +1511,7 @@ function renderLineView(){
   barChart($('#lnChart'), arr.map(e=>e.tag), arr.map(e=>({received:e.rec,remaining:e.rem,purchase:e.pur})), {});
   const tb=$('#lnTbl tbody');
   if(tb){ if(!arr.length){ tb.innerHTML='<tr><td colspan="9" class="empty">无产线标签数据</td></tr>'; }
-    else { tb.innerHTML=arr.map(e=>'<tr class="clickable" data-tag="'+e.tag+'"><td>'+e.tag+'</td><td class="num">'+e.spus.size+'</td><td><a href="javascript:;" class="spu-count" data-kind="line" data-tag="'+e.tag+'" style="color:var(--primary);text-decoration:underline">详情</a></td><td class="num">'+fmt(e.pur)+'</td><td class="num">'+fmt(e.rec)+'</td><td class="num">'+fmt(e.rem)+'</td><td class="num">'+fmt(e.pur)+'</td><td>'+pgCell(e.pur>0?e.rem/e.pur*100:0)+'</td><td class="num">'+e.sup.size+'</td></tr>').join(''); } }
+    else { tb.innerHTML=arr.map(e=>'<tr class="clickable" data-tag="'+e.tag+'"><td>'+e.tag+'</td><td class="num">'+e.spus.size+'</td><td><a href="javascript:;" class="spu-count" data-kind="line" data-tag="'+e.tag+'" style="color:var(--primary);text-decoration:underline">详情</a></td><td class="num">'+fmt(e.pur)+'</td><td class="num">'+fmt(e.rec)+'</td><td class="num">'+fmt(e.rem)+'</td><td class="num">'+fmt(e.pur)+'</td><td>'+pgCell(e.pur>0?e.rec/e.pur*100:0)+'</td><td class="num">'+e.sup.size+'</td></tr>').join(''); } }
   $('#lnNote').innerHTML='按产线标签聚合（空标签已排除）。点击行下钻明细，点击「详情」查看该产线下所有 SPU 及月度进度。';
   $('#lnTbl tbody').onclick = e=>{ const a=e.target.closest('a.spu-count'); if(a){ openTagModal(a.dataset.kind, a.dataset.tag); return; } const tr=e.target.closest('tr[data-tag]'); if(!tr) return; colFilters={}; colFilters['产线标签']={sel:new Set([tr.dataset.tag]),text:''}; goPage('detail'); };
   $('#lnChart').onclick = e=>{ const r=e.target.closest('rect.bar'); if(!r) return; colFilters={}; colFilters['产线标签']={sel:new Set([r.dataset.cat]),text:''}; goPage('detail'); };
@@ -1529,12 +1529,12 @@ function renderLineProgress(map, tag){
   if(!tag || !map){ box.innerHTML='<div class="empty">请选择标签</div>'; title.textContent='标签进度'; return; }
   const e=map.get(tag); if(!e){ box.innerHTML='<div class="empty">无数据</div>'; title.textContent='标签进度'; return; }
   title.textContent = tag + ' 进度';
-  const totalProgress=e.pur>0?e.rem/e.pur*100:0;
+  const totalProgress=e.pur>0?e.rec/e.pur*100:0;
   const mons=[...e.mons.values()].sort(tagMonthSort);
-  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：剩余 '+fmt(e.rem)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
+  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
   if(mons.length){
-    html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">剩余</th><th>进度</th></tr></thead><tbody>'
-      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rem)+'</td><td>'+pgCell(m.pur>0?m.rem/m.pur*100:0)+'</td></tr>').join('')
+    html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
+      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
       + '</tbody></table>';
   }
   box.innerHTML=html;
@@ -1552,7 +1552,7 @@ function renderTimeView(){
   barChart($('#tmChart'), arr.map(e=>e.tag), arr.map(e=>({received:e.rec,remaining:e.rem,purchase:e.pur})), {});
   const tb=$('#tmTbl tbody');
   if(tb){ if(!arr.length){ tb.innerHTML='<tr><td colspan="9" class="empty">无时效标签数据</td></tr>'; }
-    else { tb.innerHTML=arr.map(e=>'<tr class="clickable" data-tag="'+e.tag+'"><td>'+timeCell({timeTag:e.tag})+'</td><td class="num">'+e.spus.size+'</td><td><a href="javascript:;" class="spu-count" data-kind="time" data-tag="'+e.tag+'" style="color:var(--primary);text-decoration:underline">详情</a></td><td class="num">'+fmt(e.pur)+'</td><td class="num">'+fmt(e.rec)+'</td><td class="num">'+fmt(e.rem)+'</td><td class="num">'+fmt(e.pur)+'</td><td>'+pgCell(e.pur>0?e.rem/e.pur*100:0)+'</td><td class="num">'+e.sup.size+'</td></tr>').join(''); } }
+    else { tb.innerHTML=arr.map(e=>'<tr class="clickable" data-tag="'+e.tag+'"><td>'+timeCell({timeTag:e.tag})+'</td><td class="num">'+e.spus.size+'</td><td><a href="javascript:;" class="spu-count" data-kind="time" data-tag="'+e.tag+'" style="color:var(--primary);text-decoration:underline">详情</a></td><td class="num">'+fmt(e.pur)+'</td><td class="num">'+fmt(e.rec)+'</td><td class="num">'+fmt(e.rem)+'</td><td class="num">'+fmt(e.pur)+'</td><td>'+pgCell(e.pur>0?e.rec/e.pur*100:0)+'</td><td class="num">'+e.sup.size+'</td></tr>').join(''); } }
   $('#tmNote').innerHTML='按时效标签聚合（空标签已排除）。可通过右上角「供应商 / 月份」下拉交叉筛选；点击行下钻明细，点击「详情」查看该时效标签下所有 SPU 及月度进度。';
   $('#tmTbl tbody').onclick = e=>{ const a=e.target.closest('a.spu-count'); if(a){ openTagModal(a.dataset.kind, a.dataset.tag, sv, mv); return; } const tr=e.target.closest('tr[data-tag]'); if(!tr) return; colFilters={}; colFilters['时效标签']={sel:new Set([tr.dataset.tag]),text:''}; if(sv!=='全部') state.supplier=sv; if(mv!=='全部') state.month=mv; goPage('detail'); };
   $('#tmChart').onclick = e=>{ const r=e.target.closest('rect.bar'); if(!r) return; colFilters={}; colFilters['时效标签']={sel:new Set([r.dataset.cat]),text:''}; if(sv!=='全部') state.supplier=sv; if(mv!=='全部') state.month=mv; goPage('detail'); };
@@ -1570,12 +1570,12 @@ function renderTimeProgress(map, tag){
   if(!tag || !map){ box.innerHTML='<div class="empty">请选择标签</div>'; title.textContent='标签进度'; return; }
   const e=map.get(tag); if(!e){ box.innerHTML='<div class="empty">无数据</div>'; title.textContent='标签进度'; return; }
   title.textContent = tag + ' 进度';
-  const totalProgress=e.pur>0?e.rem/e.pur*100:0;
+  const totalProgress=e.pur>0?e.rec/e.pur*100:0;
   const mons=[...e.mons.values()].sort(tagMonthSort);
-  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：剩余 '+fmt(e.rem)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
+  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
   if(mons.length){
-    html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">剩余</th><th>进度</th></tr></thead><tbody>'
-      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rem)+'</td><td>'+pgCell(m.pur>0?m.rem/m.pur*100:0)+'</td></tr>').join('')
+    html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
+      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
       + '</tbody></table>';
   }
   box.innerHTML=html;
@@ -1590,13 +1590,13 @@ function openTagModal(kind, tag, sv, mv){
   const e=map.get(tag); if(!e) return;
   const spus=[...e.spus.values()].sort((a,b)=>b.pur-a.pur);
   const mons=[...e.mons.values()].sort(tagMonthSort);
-  const totalProgress=e.pur>0?e.rem/e.pur*100:0;
+  const totalProgress=e.pur>0?e.rec/e.pur*100:0;
   ov.querySelector('.spu-modal-title').textContent = (kind==='line'?'产线：':'时效标签：')+tag;
   ov.querySelector('.spu-modal-sub').textContent = '计划 '+fmt(e.pur)+' · 已收 '+fmt(e.rec)+' · 剩余 '+fmt(e.rem)+' · SPU '+spus.length+' · 供应商 '+e.sup.size;
-  let html='<div style="margin-bottom:10px;"><b>总进度</b> '+pgCell(totalProgress)+'<span style="font-size:12px;color:var(--muted);margin-left:10px;">计算：剩余 '+fmt(e.rem)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</span></div>';
+  let html='<div style="margin-bottom:10px;"><b>总进度</b> '+pgCell(totalProgress)+'<span style="font-size:12px;color:var(--muted);margin-left:10px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</span></div>';
   if(mons.length){
-    html+='<div style="margin-bottom:10px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">剩余</th><th>进度</th></tr></thead><tbody>'
-      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rem)+'</td><td>'+pgCell(m.pur>0?m.rem/m.pur*100:0)+'</td></tr>').join('')
+    html+='<div style="margin-bottom:10px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
+      + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
       + '</tbody></table>';
   }
   html+='<div style="margin-top:14px;"><b>SPU 列表</b></div><table class="mini"><thead><tr><th>SPU</th><th>物料名称</th><th>供应商简称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>完成率</th><th>交期</th></tr></thead><tbody>'

@@ -255,9 +255,6 @@ td.num{text-align:right;}
       <button class="navbtn" id="navLine" type="button">产线分析</button>
       <button class="navbtn" id="navTime" type="button">时效分析</button>
     </div>
-    <div class="side-sec side-sec-mon"><h2>月份</h2></div>
-
-    <div class="mon-chips" id="monChips"></div>
     <div class="side-sec">
       <h2>供应商</h2>
       <input class="search" id="supSearch" placeholder="搜索供应商简称">
@@ -270,7 +267,11 @@ td.num{text-align:right;}
   <section class="main" id="pageTotal" hidden>
     <div class="topbar">
       <div class="crumb">总数据 <span class="sub" id="totalCrumb"></span></div>
-      <div class="imp"><button class="btn" id="backDetail" type="button">← 返回明细</button></div>
+      <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="totalSup" class="btn" style="padding:6px 10px;"></select>
+        <span style="font-size:13px;color:var(--muted)">月份</span><select id="totalMon" class="btn" style="padding:6px 10px;"></select>
+        <button class="btn" id="backDetail" type="button">← 返回明细</button>
+      </div>
     </div>
     <div class="col-body" style="padding-top:4px;">
       <section class="tcard">
@@ -311,6 +312,8 @@ td.num{text-align:right;}
 
       <div class="crumb" id="crumb">全部供应商 <span class="sub">/ 全部月份</span></div>
       <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="dtSup" class="btn" style="padding:6px 10px;"></select>
+        <span style="font-size:13px;color:var(--muted)">月份</span><select id="dtMon" class="btn" style="padding:6px 10px;"></select>
         <button class="btn" id="impPo" title="重新解析采购订单文件(Sheet1 原始格式：由交货日期推导月份，过滤业务关闭=正常)">⬆ 导入订单更新</button>
         <button class="btn" id="impCap" title="重新解析供应商产能信息表(Sheet1)">⬆ 导入产能更新</button>
         <input type="file" id="filePo" accept=".xlsx,.xls" style="display:none">
@@ -371,15 +374,13 @@ td.num{text-align:right;}
     <div class="topbar">
       <div class="crumb">周计划模拟 <span class="sub" id="wkCrumb"></span></div>
       <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="wkSup" class="btn" style="padding:6px 10px;"></select>
+        <span style="font-size:13px;color:var(--muted)">月份</span><select id="wkMonth" class="btn" style="padding:6px 10px;"></select>
         <button class="btn" id="impWeekly" type="button" title="导入周计划分配表(Sheet1)">⬆ 导入周计划</button>
         <input type="file" id="fileWeekly" accept=".xlsx,.xls" style="display:none">
       </div>
     </div>
     <div class="note" id="wkNote"></div>
-    <div class="topbar" style="margin-bottom:12px;gap:10px;">
-      <span style="font-size:13px;color:var(--muted)">模拟月份</span>
-      <select id="wkMonth" class="btn" style="padding:6px 10px;"></select>
-    </div>
     <div class="kpis" id="wkKpis"></div>
     <div class="upper-split">
       <div class="upper-left donut-row">
@@ -400,7 +401,10 @@ td.num{text-align:right;}
   <section class="main" id="pageSupplier" hidden>
     <div class="topbar">
       <div class="crumb">供应商视图 <span class="sub" id="svCrumb"></span></div>
-      <div class="imp"><select id="svSel" class="btn" style="padding:6px 10px;"></select></div>
+      <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="svSup" class="btn" style="padding:6px 10px;"></select>
+        <span style="font-size:13px;color:var(--muted)">月份</span><select id="svMon" class="btn" style="padding:6px 10px;"></select>
+      </div>
     </div>
     <div class="note" id="svNote"></div>
     <div class="kpis" id="svKpis"></div>
@@ -421,7 +425,13 @@ td.num{text-align:right;}
 
   <!-- 产线分析 -->
   <section class="main" id="pageLine" hidden>
-    <div class="topbar"><div class="crumb">产线分析</div></div>
+    <div class="topbar">
+      <div class="crumb">产线分析</div>
+      <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="lnSup" class="btn" style="padding:6px 10px;"></select>
+        <span style="font-size:13px;color:var(--muted)">月份</span><select id="lnMon" class="btn" style="padding:6px 10px;"></select>
+      </div>
+    </div>
     <div class="note" id="lnNote"></div>
     <div class="tm-tag-bar"><span style="font-size:13px;color:var(--muted)">产线标签：</span><div id="lnTagPills"></div></div>
     <div class="tm-split">
@@ -494,6 +504,7 @@ let allMonthsAgg = [], supplierAgg = new Map();
 
 function capOf(name){ const c = capMap.get(name); return (c && c.cap > 0) ? c.cap : DEFCAP; }
 function isWeekly(r){ return !!(r && r.kind==='weekly'); }
+function supplierHasData(name){ const a=supplierAgg.get(name); if(a&&a.purchase>0) return true; return DATA.po.some(r=>isWeekly(r)&&r.supplier===name); }
 function agg(list){
   let received=0, remaining=0, purchase=0;
   for (const r of list){ received+=r.received||0; remaining+=r.remaining||0; purchase+=r.purchase||0; }
@@ -565,49 +576,56 @@ function recsOf(supplier, month){
   return DATA.po;
 }
 
+/* 下拉框填充（统一 suppliers/months，与全局 state 同步） */
+function fillSupSel(sel, selected){
+  if(!sel) return;
+  const cur = selected || sel.value || '全部';
+  sel.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value = '全部'; o0.textContent = '全部'; sel.appendChild(o0);
+  suppliers.filter(s => supplierHasData(s.name)).sort((a,b)=> (b.hasPO?1:0)-(a.hasPO?1:0) || b.cap-a.cap).forEach(s=>{
+    const o = document.createElement('option'); o.value = s.name; o.textContent = s.short || s.name; o.title = s.name; sel.appendChild(o);
+  });
+  sel.value = (cur && cur !== '全部' && Array.prototype.some.call(sel.options, o=>o.value===cur)) ? cur : '全部';
+}
+function fillMonSel(sel, selected){
+  if(!sel) return;
+  const cur = selected || sel.value || '全部';
+  sel.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value = '全部'; o0.textContent = '全部'; sel.appendChild(o0);
+  months.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+  sel.value = (cur && cur !== '全部' && Array.prototype.some.call(sel.options, o=>o.value===cur)) ? cur : '全部';
+}
+function fillWeeklyMonSel(sel, selected){
+  if(!sel) return;
+  const wm = weeklyMonths();
+  const cur = selected || sel.value || '全部月份';
+  sel.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value = '全部月份'; o0.textContent = '全部月份'; sel.appendChild(o0);
+  wm.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+  sel.value = (cur && cur !== '全部月份' && wm.includes(cur)) ? cur : '全部月份';
+}
+
 /* ---------- 筛选侧栏 ---------- */
 let lastSearch = '';
 function renderSidebar(){
   $('#srcInfo').innerHTML = `产能 ${DATA.capacity.length} 家 · 订单 ${DATA.meta.poRows} 行<br>采购 / 产能 合并视图`;
   const q = ($('#supSearch').value || '').trim();
   const box = $('#supList');
-  const needRebuild = box.children.length === 0 || q !== lastSearch;
   lastSearch = q;
-  if (needRebuild){
-    const frag = document.createDocumentFragment();
-    const mkChip = (name, short, active) => {
-      const el=document.createElement('div');
-      el.className='chip sup-chip'+(active?' active':'');
-      el.dataset.supplier = name;
-      el.title = name;
-      el.textContent = short||name;
-      return el;
-    };
-    frag.appendChild(mkChip('全部供应商','全部',state.supplier==null));
-    suppliers.filter(s => !q || s.name.includes(q) || s.short.includes(q)).forEach(s=>{
-      frag.appendChild(mkChip(s.name, s.short||s.name, state.supplier===s.name));
-    });
-    box.innerHTML=''; box.appendChild(frag);
-  } else {
-    $$('.chip.sup-chip').forEach(el=>{
-      const name = el.dataset.supplier;
-      const active = (name==='全部供应商' && state.supplier==null) || (name===state.supplier);
-      el.classList.toggle('active', active);
-    });
-  }
-  const mc=$('#monChips');
-  if (mc.children.length === 0){
-    const frag = document.createDocumentFragment();
-    ['全部月份', ...months].forEach(m=>{
-      const el=document.createElement('div'); el.className='chip'; el.dataset.month=m; el.textContent=m; frag.appendChild(el);
-    });
-    mc.innerHTML=''; mc.appendChild(frag);
-  }
-  $$('.chip').forEach(el=>{
-    const m = el.dataset.month;
-    const active = (m==='全部月份') ? state.month==null : state.month===m;
-    el.classList.toggle('active', active);
+  const frag = document.createDocumentFragment();
+  const mkChip = (name, short, active) => {
+    const el=document.createElement('div');
+    el.className='chip sup-chip'+(active?' active':'');
+    el.dataset.supplier = name;
+    el.title = name;
+    el.textContent = short||name;
+    return el;
+  };
+  frag.appendChild(mkChip('全部供应商','全部',state.supplier==null));
+  suppliers.filter(s => !q || s.name.includes(q) || s.short.includes(q)).forEach(s=>{
+    frag.appendChild(mkChip(s.name, s.short||s.name, state.supplier===s.name));
   });
+  box.innerHTML=''; box.appendChild(frag);
   $('#noteLegend').innerHTML = `完成率 = 已收 ÷ 计划 ｜ 月产能饱和度 = 剩余 ÷ 产能 ｜ 产能负荷率 = 计划 ÷ 产能`;
 }
 
@@ -616,12 +634,6 @@ $('#supList').addEventListener('click', e=>{
   const item = e.target.closest('.chip.sup-chip'); if(!item) return;
   const name = item.dataset.supplier;
   state.supplier = (name==='全部供应商') ? null : (state.supplier===name?null:name);
-  render();
-});
-$('#monChips').addEventListener('click', e=>{
-  const chip = e.target.closest('.chip'); if(!chip) return;
-  const m = chip.dataset.month;
-  state.month = (m==='全部月份') ? null : (state.month===m?null:m);
   render();
 });
 $('#supSearch').addEventListener('input', ()=>{ lastSearch=''; renderSidebar(); });
@@ -1155,6 +1167,12 @@ function render(){
   if(sup){ sb.textContent='供应商：'+(supShort(sup)); sb.title=sup; sb.style.display='block'; } else { sb.style.display='none'; }
   renderSidebar();
 
+  /* 同步各页右上角下拉框到当前 state */
+  fillSupSel($('#dtSup'), state.supplier);
+  fillMonSel($('#dtMon'), state.month);
+  fillSupSel($('#totalSup'), state.supplier);
+  fillMonSel($('#totalMon'), state.month);
+
   if(currentPage==='total'){
     const {load, saturation} = renderKpis();
     renderTop(); renderChart(); renderDonut(load); renderSatDonut(saturation); renderTable();
@@ -1299,7 +1317,6 @@ function recsKind(supplier, month, weekly){
 }
 function monthFromName(n){ const ms=String(n||'').match(/\d{1,2}/g)||[]; for(const x of ms){ const v=+x; if(v>=1&&v<=12) return v+'月'; } return '待排月'; }
 function weeklyMonths(){ const s=new Set(); for(const r of DATA.po) if(isWeekly(r)&&r.month) s.add(r.month); return [...s].sort((a,b)=>parseInt(a)-parseInt(b)); }
-function supplierHasData(name){ const a=supplierAgg.get(name); if(a&&a.purchase>0) return true; return DATA.po.some(r=>isWeekly(r)&&r.supplier===name); }
 function renderDonutEl(elId, load, title){
   const el=document.getElementById(elId); if(!el) return;
   const over=load>1, col=loadColor(load);
@@ -1310,12 +1327,12 @@ function renderDonutEl(elId, load, title){
 
 /* ---------- 周计划模拟 ---------- */
 function renderWeekly(){
+  fillSupSel($('#wkSup'), state.supplier);
   const wm=weeklyMonths();
-  const sel=$('#wkMonth');
-  if(sel){ if(sel.children.length===0){ ['全部月份', ...wm].forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); }); }
-    const want = state.month && wm.includes(state.month) ? state.month : (wm.length? wm[wm.length-1] : '全部月份');
-    sel.value = want; }
-  const mSel = sel? sel.value : '全部月份';
+  fillWeeklyMonSel($('#wkMonth'), state.month);
+  const monSel=$('#wkMonth');
+  if(wm.length && monSel && monSel.value==='全部月份') monSel.value = wm[wm.length-1];
+  const mSel = monSel? monSel.value : '全部月份';
   const sup = state.supplier;
 
   /* 收集在途数据按 (供应商,月份) 的 remaining */
@@ -1427,21 +1444,20 @@ goPage = function(p){
 
 /* ---------- 供应商视图 ---------- */
 function renderSupplierView(){
-  const sel=$('#svSel');
-  if(sel){ if(sel.children.length===0){ suppliers.filter(s=>supplierHasData(s.name)).sort((a,b)=>b.cap-a.cap).forEach(s=>{ const o=document.createElement('option'); o.value=s.name; o.textContent=s.short||s.name; o.title=s.name; sel.appendChild(o); }); }
-    if(!sel.value) sel.value = sel.children.length? sel.children[0].value : '';
-    if(state.supplier && Array.prototype.some.call(sel.options, o=>o.value===state.supplier)) sel.value=state.supplier; }
-  const name = sel? sel.value : state.supplier;
+  fillSupSel($('#svSup'), state.supplier);
+  fillMonSel($('#svMon'), state.month);
+  const name = state.supplier;
+  const mon = state.month;
   const box=$('#svKpis');
   if(!name){ box.innerHTML='<div class="kpi"><div class="label">提示</div><div class="val" style="font-size:15px">请在右上角选择供应商</div></div>'; const d=$('#svDonut'); if(d) d.innerHTML=''; const d2=$('#svDonut2'); if(d2) d2.innerHTML=''; const tb=$('#svTbl tbody'); if(tb) tb.innerHTML=''; return; }
   const cap=capOf(name);
-  const now=agg(recsKind(name,null,false)), sim=agg(recsKind(name,null,true));
+  const now=agg(recsKind(name,mon,false)), sim=agg(recsKind(name,mon,true));
   const remNow=now.remaining, weeklyPur=sim.purchase; const loadNow=cap>0?remNow/cap:0, loadSim=cap>0?(remNow+weeklyPur)/cap:0;
   renderDonutEl('svDonut', loadNow, '现有负荷率'); renderDonutEl('svDonut2', loadSim, '本周计划负荷率');
   $('#svDonutInfo').innerHTML = '现有剩余 '+fmt(remNow)+' / 月产能 '+fmt(cap);
   $('#svDonutInfo2').innerHTML = '本周计划 '+fmt(sim.purchase)+' / 月产能 '+fmt(cap);
   const g=new Map();
-  recsKind(name,null,null).forEach(r=>{ const spu=r.spu||r.materialCode||'—'; if(!g.has(spu)) g.set(spu,[]); g.get(spu).push(r); });
+  recsKind(name,mon,null).forEach(r=>{ const spu=r.spu||r.materialCode||'—'; if(!g.has(spu)) g.set(spu,[]); g.get(spu).push(r); });
   const spuRows=[];
   for(const [spu, recs] of g){
     let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[];
@@ -1453,7 +1469,7 @@ function renderSupplierView(){
     spuRows.push({spu, name:name0||spu, completion, received:rec, remaining:rem, purchase:pur, orders:pur, skus:[...skus.values()], dd:dds.length?dds[0]:'—'});
   }
   spuRows.sort((a,b)=>b.purchase-a.purchase);
-  const distinctPO=new Set(recsKind(name,null,false).map(r=>r.poNo).filter(Boolean)).size;
+  const distinctPO=new Set(recsKind(name,mon,false).map(r=>r.poNo).filter(Boolean)).size;
   box.innerHTML=[
     {label:'月产能',val:fmt(cap),color:'var(--primary)',bg:'var(--primary-soft)'},
     {label:'现有计划',val:fmt(now.purchase),color:'var(--plan)',bg:'var(--plan-soft)'},
@@ -1463,9 +1479,9 @@ function renderSupplierView(){
   ].map(c=>'<div class="kpi"><div class="label"><span class="swatch" style="background:'+c.color+'"></span>'+c.label+'</div><div class="val">'+c.val+'</div></div>').join('');
   const tb=$('#svTbl tbody');
   if(tb){ tb.innerHTML = spuRows.length? spuRows.map((r,i)=>'<tr class="clickable" data-i="'+i+'"><td>'+r.spu+'</td><td>'+r.name+'</td><td>'+pgCell(r.completion*100)+'</td><td class="num">'+fmt(r.purchase)+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+r.orders+'</td><td>'+r.dd+'</td></tr>').join('') : '<tr><td colspan="8" class="empty">无数据</td></tr>'; }
-  $('#svCrumb').textContent=name;
+  $('#svCrumb').textContent = (supShort(name)) + ' / ' + (mon || '全部月份');
   $('#svTbl tbody').onclick = e=>{ const tr=e.target.closest('tr[data-i]'); if(!tr) return; openSpuModal(name, spuRows[+tr.dataset.i]); };
-  renderSvDetail(name);
+  renderSvDetail(name, mon);
 }
 function openSpuModal(supplier, spuRow){
   const ov=$('#spuModal'); if(!ov) return;
@@ -1482,7 +1498,7 @@ function closeSpuModal(){ const ov=$('#spuModal'); if(ov) ov.style.display='none
 
 /* ---------- 预交货日期 / SPU 子数据辅助（addDays / weeklyPreDelivery 已前置到主脚本块，供 buildRows 启动期调用） ---------- */
 function buildSpuRow(supplier,poNo,spu){ const recs=DATA.po.filter(r=>r.supplier===supplier && (poNo?r.poNo===poNo:true) && (r.spu||r.materialCode||'—')===(spu||'—')); if(!recs.length) return null; let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[]; recs.forEach(r=>{ rec+=r.received; rem+=r.remaining; pur+=r.purchase; const mc=r.materialCode||''; if(mc){ if(!skus.has(mc)) skus.set(mc,{code:mc,name:r.materialName||'',rec:r.received,rem:r.remaining,pur:r.purchase}); else { const e=skus.get(mc); e.rec+=r.received; e.rem+=r.remaining; e.pur+=r.purchase; } } if(r.materialName && (!name0||r.materialName.length<name0.length)) name0=r.materialName; if(r.deliveryDate) ddSet.push(r.deliveryDate); }); const completion=pur>0?rec/pur:0; const dds=[...new Set(ddSet)].sort(ddCmp); return {spu,name:name0||spu,completion,received:rec,remaining:rem,purchase:pur,orders:pur,skus:[...skus.values()],dd:dds.length?dds[0]:'—'}; }
-function renderSvDetail(supplier){ const tb=$('#svDetailTbl tbody'); if(!tb) return; const rows=buildRows(DATA.po.filter(r=>r.supplier===supplier)); if(!rows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">无数据</td></tr>'; return; } tb.innerHTML=rows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; const row=rows[+tr.dataset.ri]; if(row) openSpuModal(supplier,buildSpuRow(supplier,row.poNo,row.spu)); }; }
+function renderSvDetail(supplier, mon){ const tb=$('#svDetailTbl tbody'); if(!tb) return; let list=DATA.po.filter(r=>r.supplier===supplier); if(mon) list=list.filter(r=>r.month===mon); const rows=buildRows(list); if(!rows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">无数据</td></tr>'; return; } tb.innerHTML=rows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; const row=rows[+tr.dataset.ri]; if(row) openSpuModal(supplier,buildSpuRow(supplier,row.poNo,row.spu)); }; }
 
 /* ---------- 产线/时效聚合辅助 ---------- */
 function tagAgg(items, tagField){
@@ -1506,15 +1522,19 @@ function tagMonthSort(a,b){ return parseInt((a.month+'').replace(/\D/g,'')||'0')
 
 /* ---------- 产线分析 ---------- */
 function renderLineView(){
-  const map=tagAgg(DATA.po,'lineTag');
+  fillSupSel($('#lnSup'), state.supplier);
+  fillMonSel($('#lnMon'), state.month);
+  const sv = state.supplier, mv = state.month;
+  const list = DATA.po.filter(r=>{ if(sv && r.supplier!==sv) return false; if(mv && r.month!==mv) return false; return true; });
+  const map=tagAgg(list,'lineTag');
   const arr=[...map.values()].sort((a,b)=>b.pur-a.pur);
   barChart($('#lnChart'), arr.map(e=>e.tag), arr.map(e=>({received:e.rec,remaining:e.rem,purchase:e.pur})), {});
   const tb=$('#lnTbl tbody');
   if(tb){ if(!arr.length){ tb.innerHTML='<tr><td colspan="9" class="empty">无产线标签数据</td></tr>'; }
     else { tb.innerHTML=arr.map(e=>'<tr class="clickable" data-tag="'+e.tag+'"><td>'+e.tag+'</td><td class="num">'+e.spus.size+'</td><td><a href="javascript:;" class="spu-count" data-kind="line" data-tag="'+e.tag+'" style="color:var(--primary);text-decoration:underline">详情</a></td><td class="num">'+fmt(e.pur)+'</td><td class="num">'+fmt(e.rec)+'</td><td class="num">'+fmt(e.rem)+'</td><td class="num">'+fmt(e.pur)+'</td><td>'+pgCell(e.pur>0?e.rec/e.pur*100:0)+'</td><td class="num">'+e.sup.size+'</td></tr>').join(''); } }
-  $('#lnNote').innerHTML='按产线标签聚合（空标签已排除）。点击行下钻明细，点击「详情」查看该产线下所有 SPU 及月度进度。';
-  $('#lnTbl tbody').onclick = e=>{ const a=e.target.closest('a.spu-count'); if(a){ openTagModal(a.dataset.kind, a.dataset.tag); return; } const tr=e.target.closest('tr[data-tag]'); if(!tr) return; colFilters={}; colFilters['产线标签']={sel:new Set([tr.dataset.tag]),text:''}; goPage('detail'); };
-  $('#lnChart').onclick = e=>{ const r=e.target.closest('rect.bar'); if(!r) return; colFilters={}; colFilters['产线标签']={sel:new Set([r.dataset.cat]),text:''}; goPage('detail'); };
+  $('#lnNote').innerHTML='按产线标签聚合（空标签已排除）。可通过右上角「供应商 / 月份」下拉交叉筛选；点击行下钻明细，点击「详情」查看该产线下所有 SPU 及月度进度。';
+  $('#lnTbl tbody').onclick = e=>{ const a=e.target.closest('a.spu-count'); if(a){ openTagModal(a.dataset.kind, a.dataset.tag, sv||'全部', mv||'全部'); return; } const tr=e.target.closest('tr[data-tag]'); if(!tr) return; colFilters={}; colFilters['产线标签']={sel:new Set([tr.dataset.tag]),text:''}; if(sv) state.supplier=sv; if(mv) state.month=mv; goPage('detail'); };
+  $('#lnChart').onclick = e=>{ const r=e.target.closest('rect.bar'); if(!r) return; colFilters={}; colFilters['产线标签']={sel:new Set([r.dataset.cat]),text:''}; if(sv) state.supplier=sv; if(mv) state.month=mv; goPage('detail'); };
   /* 标签 pills 与右侧进度面板 */
   const pillsBox=$('#lnTagPills');
   if(pillsBox){ pillsBox.innerHTML = arr.map(e=>'<div class="chip'+(state.lineTag===e.tag?' active':'')+'" data-tag="'+e.tag+'">'+e.tag+'</div>').join(''); }
@@ -1542,10 +1562,9 @@ function renderLineProgress(map, tag){
 
 /* ---------- 时效分析 ---------- */
 function renderTimeView(){
-  const supSel=$('#tmSup'), monSel=$('#tmMon');
-  if(supSel && supSel.children.length===0){ const supList=suppliers.filter(s=>supplierHasData(s.name)); const o0=document.createElement('option'); o0.value='全部'; o0.textContent='全部'; supSel.appendChild(o0); supList.forEach(s=>{ const o=document.createElement('option'); o.value=s.name; o.textContent=s.short||s.name; supSel.appendChild(o); }); }
-  if(monSel && monSel.children.length===0){ ['全部', ...months].forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; monSel.appendChild(o); }); }
-  const sv = supSel? supSel.value : '全部', mv = monSel? monSel.value : '全部';
+  fillSupSel($('#tmSup'), state.supplier);
+  fillMonSel($('#tmMon'), state.month);
+  const sv = state.supplier || '全部', mv = state.month || '全部';
   const list=DATA.po.filter(r=>{ if(sv!=='全部' && r.supplier!==sv) return false; if(mv!=='全部' && r.month!==mv) return false; return true; });
   const map=tagAgg(list,'timeTag');
   const arr=[...map.values()].sort((a,b)=>b.pur-a.pur);
@@ -1610,10 +1629,26 @@ function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none
 
 /* ---------- 事件绑定 ---------- */
 ['navWeekly','navSupplier','navLine','navTime'].forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(id.replace('nav','').toLowerCase())); });
+function bindFilter(selId, field, pageRender){
+  const sel = $(selId); if(!sel) return;
+  sel.addEventListener('change', ()=>{
+    const v = sel.value;
+    state[field] = (v==='全部' || v==='全部月份' || v==='') ? null : v;
+    if(pageRender) pageRender(); else render();
+  });
+}
+bindFilter('#dtSup','supplier');
+bindFilter('#dtMon','month');
+bindFilter('#totalSup','supplier');
+bindFilter('#totalMon','month');
+bindFilter('#svSup','supplier', renderSupplierView);
+bindFilter('#svMon','month', renderSupplierView);
+bindFilter('#wkSup','supplier', renderWeekly);
 if($('#wkMonth')) $('#wkMonth').addEventListener('change', ()=>{ state.month = $('#wkMonth').value==='全部月份'?null:$('#wkMonth').value; renderWeekly(); });
-if($('#svSel')) $('#svSel').addEventListener('change', renderSupplierView);
-if($('#tmSup')) $('#tmSup').addEventListener('change', renderTimeView);
-if($('#tmMon')) $('#tmMon').addEventListener('change', renderTimeView);
+bindFilter('#lnSup','supplier', renderLineView);
+bindFilter('#lnMon','month', renderLineView);
+if($('#tmSup')) $('#tmSup').addEventListener('change', ()=>{ state.supplier = $('#tmSup').value==='全部'?null:$('#tmSup').value; renderTimeView(); });
+if($('#tmMon')) $('#tmMon').addEventListener('change', ()=>{ state.month = $('#tmMon').value==='全部'?null:$('#tmMon').value; renderTimeView(); });
 if($('#spuModalClose')) $('#spuModalClose').addEventListener('click', closeSpuModal);
 if($('#spuModal')) $('#spuModal').addEventListener('click', e=>{ if(e.target.id==='spuModal') closeSpuModal(); });
 if($('#tagModalClose')) $('#tagModalClose').addEventListener('click', closeTagModal);

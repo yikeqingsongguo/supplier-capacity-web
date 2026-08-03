@@ -250,6 +250,7 @@ td.num{text-align:right;}
     <div class="nav">
       <!-- 明细已并入供应商视图·各供应商明细 -->
       <button class="navbtn" id="navTotal" type="button">总数据</button>
+      <button class="navbtn" id="navDetail" type="button">明细</button>
       <button class="navbtn" id="navWeekly" type="button">周计划模拟</button>
       <button class="navbtn" id="navSupplier" type="button">供应商视图</button>
       <button class="navbtn" id="navLine" type="button">产线分析</button>
@@ -307,7 +308,7 @@ td.num{text-align:right;}
 
 
   <!-- 3 明细分析区 -->
-  <main class="main" id="pageDetail">
+  <main class="main" id="pageDetail" hidden>
     <div class="topbar">
 
       <div class="crumb" id="crumb">全部供应商 <span class="sub">/ 全部月份</span></div>
@@ -414,12 +415,12 @@ td.num{text-align:right;}
         <div class="card"><h3>本周计划负荷率 <span class="hint" id="svSimHint"></span></h3><div class="donut-wrap"><div id="svDonut2" style="flex:0 0 150px;"></div><div class="donut-info" id="svDonutInfo2"></div></div></div>
       </div>
       <div class="upper-right">
-        <div class="card card-full"><h3>SPU 明细 <span class="hint">点击 SPU 查看 SKU 子数据</span></h3><div class="tbl-scroll" style="max-height:560px;"><table id="svTbl"><thead><tr><th>SPU</th><th>物料名称</th><th>完成率</th><th class="num">计划</th><th class="num">已收</th><th class="num">剩余</th><th class="num">采购订单数量</th><th>最早交期</th></tr></thead><tbody></tbody></table></div></div>
+        <div class="card card-full"><h3>SPU 明细 <span class="hint">点击 SPU 查看 SKU 子数据</span></h3><div class="tbl-scroll" style="max-height:560px;"><table id="svTbl"><thead><tr><th>SPU</th><th>物料名称</th><th>完成率</th><th class="num">计划</th><th class="num">已收</th><th class="num">剩余</th><th class="num">采购订单数量</th><th>交期</th></tr></thead><tbody></tbody></table></div></div>
       </div>
     </div>
     <div class="card card-full" style="margin-top:16px;">
-      <h3>各供应商明细 <span class="hint">点击 SPU 行展开 SKU 子数据</span></h3>
-      <div class="tbl-scroll" style="max-height:520px;"><table id="svDetailTbl"><thead><tr><th>采购订单编号</th><th>供应商</th><th>SPU</th><th>物料名称</th><th class="num">已收</th><th class="num">剩余</th><th class="num">计划</th><th>完成率</th><th>交货日期</th><th>状态</th><th>产线标签</th><th>时效标签</th><th>单据类型</th><th>创建人</th></tr></thead><tbody></tbody></table></div>
+      <h3>各供应商明细 <span class="hint">点击 SPU 行展开 SKU 子数据</span> <button id="svClearFilters" class="btn-sm" type="button">清空筛选</button> <span id="svFilterSummary" class="hint"></span></h3>
+      <div class="tbl-scroll" style="max-height:520px;"><table id="svDetailTbl"><thead><tr><th data-f="采购订单编号">采购订单编号<span class="flt" data-f="采购订单编号">▾</span></th><th data-f="供应商">供应商<span class="flt" data-f="供应商">▾</span></th><th data-f="SPU">SPU<span class="flt" data-f="SPU">▾</span></th><th data-f="物料名称">物料名称<span class="flt" data-f="物料名称">▾</span></th><th class="num" data-f="已收">已收<span class="flt" data-f="已收">▾</span></th><th class="num" data-f="剩余">剩余<span class="flt" data-f="剩余">▾</span></th><th class="num" data-f="计划">计划<span class="flt" data-f="计划">▾</span></th><th data-f="完成率">完成率<span class="flt" data-f="完成率">▾</span></th><th data-f="交货日期">交货日期<span class="flt" data-f="交货日期">▾</span></th><th data-f="状态">状态<span class="flt" data-f="状态">▾</span></th><th data-f="产线标签">产线标签<span class="flt" data-f="产线标签">▾</span></th><th data-f="时效标签">时效标签<span class="flt" data-f="时效标签">▾</span></th><th data-f="单据类型">单据类型<span class="flt" data-f="单据类型">▾</span></th><th data-f="创建人">创建人<span class="flt" data-f="创建人">▾</span></th></tr></thead><tbody></tbody></table></div>
     </div>
   </section>
 
@@ -464,6 +465,7 @@ td.num{text-align:right;}
 <div class="pop" id="pop"></div>
 <div class="chart-tip" id="chartTip"></div>
 <div class="filter-panel" id="filterPanel" style="display:none"></div>
+<div class="filter-panel" id="svFilterPanel" style="display:none"></div>
 <div class="spu-modal" id="spuModal">
   <div class="spu-modal-card">
     <div class="spu-modal-head"><div><div class="spu-modal-title"></div><div class="spu-modal-sub" style="font-size:12px;color:var(--muted);margin-top:4px;"></div></div><button class="fp-x" id="spuModalClose" type="button">×</button></div>
@@ -637,7 +639,7 @@ $('#supList').addEventListener('click', e=>{
   render();
 });
 $('#supSearch').addEventListener('input', ()=>{ lastSearch=''; renderSidebar(); });
-$('#resetBtn').addEventListener('click', ()=>{ state={supplier:null,month:null}; render(); });
+$('#resetBtn').addEventListener('click', ()=>{ state={supplier:null,month:null}; colFilters={}; svColFilters={}; render(); });
 
 /* ---------- KPI ---------- */
 function renderKpis(){
@@ -966,8 +968,10 @@ const FILTER_FIELDS = [
   {f:'创建人', get:r=>r.creator||'—'},
 ];
 let colFilters = {};
-function filteredRows(rows){
-  const active = Object.entries(colFilters).filter(([f,v])=> v && (v.sel!==null || (v.text||'')!==''));
+let svColFilters = {};
+function filteredRows(rows, cf){
+  const c = cf || colFilters;
+  const active = Object.entries(c).filter(([f,v])=> v && (v.sel!==null || (v.text||'')!==''));
   if(!active.length) return rows;
   return rows.filter(r=>{
     for(const [f,v] of active){
@@ -989,6 +993,57 @@ function updateFilterUI(){
   });
   const n = Object.values(colFilters).filter(v=> v && (v.sel!==null || (v.text||'')!=='')).length;
   $('#filterSummary').textContent = n ? ('已筛选 '+n+' 列') : '';
+}
+function svUpdateFilterUI(){
+  $$('#svDetailTbl thead .flt').forEach(b=>{
+    const v = svColFilters[b.dataset.f];
+    const active = !!(v && (v.sel!==null || (v.text||'')!==''));
+    b.classList.toggle('on', active);
+    b.textContent = active ? '▼' : '▾';
+    b.closest('th').classList.toggle('filtered', active);
+  });
+  const n2 = Object.values(svColFilters).filter(v=> v && (v.sel!==null || (v.text||'')!=='')).length;
+  const el=$('#svFilterSummary'); if(el) el.textContent = n2 ? ('已筛选 '+n2+' 列') : '';
+}
+function svOpenFilter(f, ev){
+  const panel = $('#svFilterPanel');
+  const all = buildRows(DATA.po.filter(r=> r.supplier===state.supplier && (!state.month || r.month===state.month)));
+  const fld = FILTER_FIELDS.find(x=>x.f===f);
+  let vals = [...new Set(all.map(r=>String(fld.get(r))))];
+  const numeric = vals.length && vals.every(v=> v==='—' || /^[0-9.,%]/.test(v));
+  vals.sort((a,b)=> numeric ? ((parseFloat(a)||1e9)-(parseFloat(b)||1e9)) : a.localeCompare(b,'zh'));
+  const cur = svColFilters[f] || {sel:null, text:''};
+  const checked = cur.sel || new Set(vals);
+  panel.innerHTML = '<div class="fp-head">'+f+' 筛选 <button type="button" class="fp-x" id="svFpClose">×</button></div>'
+    + '<input class="fp-search" id="svFpSearch" placeholder="搜索可选项…" value="'+escHtml(cur.text||'')+'">'
+    + '<div class="fp-actions"><button type="button" id="svFpAll">全选</button><button type="button" id="svFpNone">清空</button></div>'
+    + '<div class="fp-list" id="svFpList">'+ vals.map((v,i)=>'<label class="fp-item"><input type="checkbox" data-i="'+i+'" '+((checked.has(v))?'checked':'')+'><span>'+escHtml(v)+'</span></label>').join('') +'</div>'
+    + '<div class="fp-foot"><button type="button" class="fp-apply" id="svFpApply">应用</button></div>';
+  panel.style.display='block';
+  const bw = panel.offsetWidth, bh = panel.offsetHeight;
+  let x = ev.clientX, y = ev.clientY;
+  if(x+bw>window.innerWidth) x = window.innerWidth-bw-8;
+  if(y+bh>window.innerHeight) y = window.innerHeight-bh-8;
+  panel.style.left = Math.max(8,x)+'px';
+  panel.style.top = Math.max(8,y)+'px';
+  const list = $('#svFpList');
+  const search = $('#svFpSearch');
+  function syncFromList(){
+    const boxes = list.querySelectorAll('input[type=checkbox]');
+    const sel = new Set();
+    boxes.forEach(b=>{ if(b.checked) sel.add(vals[+b.dataset.i]); });
+    svColFilters[f] = (sel.size>=vals.length) ? {sel:null, text:search.value.trim()} : {sel, text:search.value.trim()};
+    svUpdateFilterUI(); renderSvDetail(state.supplier, state.month);
+  }
+  list.addEventListener('change', syncFromList);
+  search.addEventListener('input', ()=>{
+    const q = search.value.trim().toLowerCase();
+    list.querySelectorAll('.fp-item').forEach(l=>{ l.style.display = (!q || l.textContent.toLowerCase().includes(q)) ? '' : 'none'; });
+  });
+  $('#svFpAll').onclick = ()=>{ list.querySelectorAll('input').forEach(b=>b.checked=true); syncFromList(); };
+  $('#svFpNone').onclick = ()=>{ list.querySelectorAll('input').forEach(b=>b.checked=false); syncFromList(); };
+  $('#svFpClose').onclick = ()=>{ panel.style.display='none'; };
+  $('#svFpApply').onclick = ()=>{ panel.style.display='none'; };
 }
 function openFilter(f, ev){
   const panel = $('#filterPanel');
@@ -1032,6 +1087,8 @@ function openFilter(f, ev){
 }
 $$('#tbl thead .flt').forEach(b=> b.addEventListener('click', e=>{ e.stopPropagation(); openFilter(b.dataset.f, e); }));
 $('#clearFilters').addEventListener('click', ()=>{ colFilters={}; $('#filterPanel').style.display='none'; updateFilterUI(); renderTable(); });
+$$('#svDetailTbl thead .flt').forEach(b=> b.addEventListener('click', e=>{ e.stopPropagation(); svOpenFilter(b.dataset.f, e); }));
+$('#svClearFilters').addEventListener('click', ()=>{ svColFilters={}; $('#svFilterPanel').style.display='none'; svUpdateFilterUI(); renderSvDetail(state.supplier, state.month); });
 
 function daysInfo(dateStr){
   if(!dateStr) return {txt:'—', cls:''};
@@ -1041,6 +1098,14 @@ function daysInfo(dateStr){
   if(isNaN(d.getTime())) return {txt:'—', cls:''};
   const diff = Math.round((d - TODAY)/86400000);
   return diff >= 0 ? {txt:'剩 '+diff+' 天', cls:'ok'} : {txt:'逾期 '+(-diff)+' 天', cls:'over'};
+}
+/* SPU 聚合逾期口径：已完成(剩余<=0且收满)显示「已完成」；否则只看未完成(剩余>0)订单的最早交期算逾期/剩余 */
+function spuOverdueDi(dds, incDds, received, remaining, purchase){
+  if((remaining||0)<=0 && (purchase||0)>0 && (received||0)>=(purchase||0)) return {txt:'已完成', cls:'ok'};
+  const src = (incDds && incDds.length) ? incDds : dds;
+  if(!src || !src.length) return {txt:'—', cls:''};
+  const earliest = [...new Set(src)].sort(ddCmp)[0];
+  return daysInfo(earliest);
 }
 
 /* 产能负荷率三档配色：<50% 绿 / 50%-80% 黄 / >80% 红 */
@@ -1113,13 +1178,13 @@ function renderInTransit(){
     const k = r.deliveryDate || '—';
     if(!g.has(k)) g.set(k, []); g.get(k).push(r);
   }
-  const rows = [...g.entries()].map(([k,v])=>({dd:k, ...agg(v)}))
+  const rows = [...g.entries()].map(([k,v])=>({dd:k, recs:v, spuCount:new Set(v.map(r=>r.spu||r.materialCode||'—')).size, ...agg(v)}))
     .sort((a,b)=> (a.dd==='—'?1:0)-(b.dd==='—'?1:0) || (a.dd<b.dd?-1:1));
   const totRem = rows.reduce((s,r)=>s+r.remaining,0), totPur = rows.reduce((s,r)=>s+r.purchase,0);
-  box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
-    + rows.map(r=>`<tr><td>${r.dd||'—'}</td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
+  box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">SPU数量</th><th>详情</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
+    + rows.map((r,i)=>`<tr><td>${r.dd||'—'}</td><td class="r">${r.spuCount}</td><td><a href="javascript:;" class="spu-count" data-gi="${i}">详情</a></td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
     + `</tbody></table><div class="mini-foot">在途合计 <b>${fmt(totRem)}</b> · 采购订单数量合计 <b>${fmt(totPur)}</b></div>`;
-
+  box.onclick = e=>{ const a=e.target.closest('a.spu-count'); if(!a) return; const r=rows[+a.dataset.gi]; if(!r) return; openRecsModal('本月 · 交货日期 '+r.dd, r.recs, s=>buildDrill({supplier:state.supplier, spu:s.spu, month:cur})); };
 }
 function renderInTransitNext(){
   const nm = (TODAY.getMonth()+1)%12 + 1;
@@ -1134,13 +1199,13 @@ function renderInTransitNext(){
     const k = r.deliveryDate || '—';
     if(!g.has(k)) g.set(k, []); g.get(k).push(r);
   }
-  const rows = [...g.entries()].map(([k,v])=>({dd:k, ...agg(v)}))
+  const rows = [...g.entries()].map(([k,v])=>({dd:k, recs:v, spuCount:new Set(v.map(r=>r.spu||r.materialCode||'—')).size, ...agg(v)}))
     .sort((a,b)=> (a.dd==='—'?1:0)-(b.dd==='—'?1:0) || (a.dd<b.dd?-1:1));
   const totRem = rows.reduce((s,r)=>s+r.remaining,0), totPur = rows.reduce((s,r)=>s+r.purchase,0);
-  box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
-    + rows.map(r=>`<tr><td>${r.dd||'—'}</td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
+  box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">SPU数量</th><th>详情</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
+    + rows.map((r,i)=>`<tr><td>${r.dd||'—'}</td><td class="r">${r.spuCount}</td><td><a href="javascript:;" class="spu-count" data-gi="${i}">详情</a></td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
     + `</tbody></table><div class="mini-foot">在途合计 <b>${fmt(totRem)}</b> · 采购订单数量合计 <b>${fmt(totPur)}</b></div>`;
-
+  box.onclick = e=>{ const a=e.target.closest('a.spu-count'); if(!a) return; const r=rows[+a.dataset.gi]; if(!r) return; openRecsModal('下月 · 交货日期 '+r.dd, r.recs, s=>buildDrill({supplier:state.supplier, spu:s.spu, month:cur})); };
 }
 function renderCompare(){
   const mon = state.month;
@@ -1148,14 +1213,15 @@ function renderCompare(){
   hint.textContent = mon? mon : '全部月份';
   const rows = suppliers.map(s=>{
     const a = mon ? supMonthAgg(s.name, mon) : (supplierAgg.get(s.name)||{received:0,remaining:0,purchase:0,completion:0});
-    return {name:s.name, short:s.short, ...a, isSel: state.supplier===s.name};
+    const recs = recsOf(s.name, mon);
+    return {name:s.name, short:s.short, ...a, isSel: state.supplier===s.name, recs, spuCount:new Set(recs.map(r=>r.spu||r.materialCode||'—')).size};
   }).filter(r=> r.purchase>0).sort((a,b)=> b.remaining-a.remaining);
   if(!rows.length){ card.style.display='none'; return; }
   card.style.display='';
-  box.innerHTML = `<table class="mini"><thead><tr><th>供应商</th><th class="r">采购订单数量</th><th class="r">在途数量</th><th class="r">已收料数量</th><th>完成率</th></tr></thead><tbody>`
-    + rows.map(r=>`<tr class="${r.isSel?'sel':''}"><td title="${r.name}">${r.short||r.name}</td><td class="r">${fmt(r.purchase)}</td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.received)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
+  box.innerHTML = `<table class="mini"><thead><tr><th>供应商</th><th class="r">SPU数量</th><th>详情</th><th class="r">采购订单数量</th><th class="r">在途数量</th><th class="r">已收料数量</th><th>完成率</th></tr></thead><tbody>`
+    + rows.map((r,i)=>`<tr class="${r.isSel?'sel':''}"><td title="${r.name}">${r.short||r.name}</td><td class="r">${r.spuCount}</td><td><a href="javascript:;" class="spu-count" data-gi="${i}">详情</a></td><td class="r">${fmt(r.purchase)}</td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.received)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
     + `</tbody></table>`;
-
+  box.onclick = e=>{ const a=e.target.closest('a.spu-count'); if(!a) return; const r=rows[+a.dataset.gi]; if(!r) return; openRecsModal((r.short||r.name)+' · '+(mon||'全部月份'), r.recs, s=>buildDrill({supplier:r.name, spu:s.spu, month:mon})); };
 }
 
 /* ---------- 总渲染 ---------- */
@@ -1460,13 +1526,13 @@ function renderSupplierView(){
   recsKind(name,mon,null).forEach(r=>{ const spu=r.spu||r.materialCode||'—'; if(!g.has(spu)) g.set(spu,[]); g.get(spu).push(r); });
   const spuRows=[];
   for(const [spu, recs] of g){
-    let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[];
+    let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[], incSet=[];
     recs.forEach(r=>{ rec+=r.received; rem+=r.remaining; pur+=r.purchase;
       const mc=r.materialCode||''; if(mc){ if(!skus.has(mc)) skus.set(mc,{code:mc, name:r.materialName||'', rec:r.received, rem:r.remaining, pur:r.purchase}); else { const e=skus.get(mc); e.rec+=r.received; e.rem+=r.remaining; e.pur+=r.purchase; } }
       if(r.materialName && (!name0 || r.materialName.length<name0.length)) name0=r.materialName;
-      if(r.deliveryDate) ddSet.push(r.deliveryDate); });
-    const completion=pur>0?rec/pur:0; const dds=[...new Set(ddSet)].sort(ddCmp);
-    spuRows.push({spu, name:name0||spu, completion, received:rec, remaining:rem, purchase:pur, orders:pur, skus:[...skus.values()], dd:dds.length?dds[0]:'—'});
+      if(r.deliveryDate){ ddSet.push(r.deliveryDate); if((r.remaining||0)>0) incSet.push(r.deliveryDate); } });
+    const completion=pur>0?rec/pur:0; const dds=[...new Set(ddSet)].sort(ddCmp), incDds=[...new Set(incSet)].sort(ddCmp);
+    spuRows.push({spu, name:name0||spu, completion, received:rec, remaining:rem, purchase:pur, orders:pur, skus:[...skus.values()], dds, incDds});
   }
   spuRows.sort((a,b)=>b.purchase-a.purchase);
   const distinctPO=new Set(recsKind(name,mon,false).map(r=>r.poNo).filter(Boolean)).size;
@@ -1478,7 +1544,7 @@ function renderSupplierView(){
     {label:'在途数量',val:fmt(now.remaining),color:'var(--amber)',bg:'var(--amber-soft)'},
   ].map(c=>'<div class="kpi"><div class="label"><span class="swatch" style="background:'+c.color+'"></span>'+c.label+'</div><div class="val">'+c.val+'</div></div>').join('');
   const tb=$('#svTbl tbody');
-  if(tb){ tb.innerHTML = spuRows.length? spuRows.map((r,i)=>'<tr class="clickable" data-i="'+i+'"><td>'+r.spu+'</td><td>'+r.name+'</td><td>'+pgCell(r.completion*100)+'</td><td class="num">'+fmt(r.purchase)+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+r.orders+'</td><td>'+r.dd+'</td></tr>').join('') : '<tr><td colspan="8" class="empty">无数据</td></tr>'; }
+  if(tb){ tb.innerHTML = spuRows.length? spuRows.map((r,i)=>{ const di=spuOverdueDi(r.dds,r.incDds,r.received,r.remaining,r.purchase); return '<tr class="clickable" data-i="'+i+'"><td>'+r.spu+'</td><td>'+r.name+'</td><td>'+pgCell(r.completion*100)+'</td><td class="num">'+fmt(r.purchase)+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+r.orders+'</td><td><span class="tag '+di.cls+'">'+di.txt+'</span></td></tr>'; }).join('') : '<tr><td colspan="8" class="empty">无数据</td></tr>'; }
   $('#svCrumb').textContent = (supShort(name)) + ' / ' + (mon || '全部月份');
   $('#svTbl tbody').onclick = e=>{ const tr=e.target.closest('tr[data-i]'); if(!tr) return; openSpuModal(name, spuRows[+tr.dataset.i]); };
   renderSvDetail(name, mon);
@@ -1498,7 +1564,7 @@ function closeSpuModal(){ const ov=$('#spuModal'); if(ov) ov.style.display='none
 
 /* ---------- 预交货日期 / SPU 子数据辅助（addDays / weeklyPreDelivery 已前置到主脚本块，供 buildRows 启动期调用） ---------- */
 function buildSpuRow(supplier,poNo,spu){ const recs=DATA.po.filter(r=>r.supplier===supplier && (poNo?r.poNo===poNo:true) && (r.spu||r.materialCode||'—')===(spu||'—')); if(!recs.length) return null; let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[]; recs.forEach(r=>{ rec+=r.received; rem+=r.remaining; pur+=r.purchase; const mc=r.materialCode||''; if(mc){ if(!skus.has(mc)) skus.set(mc,{code:mc,name:r.materialName||'',rec:r.received,rem:r.remaining,pur:r.purchase}); else { const e=skus.get(mc); e.rec+=r.received; e.rem+=r.remaining; e.pur+=r.purchase; } } if(r.materialName && (!name0||r.materialName.length<name0.length)) name0=r.materialName; if(r.deliveryDate) ddSet.push(r.deliveryDate); }); const completion=pur>0?rec/pur:0; const dds=[...new Set(ddSet)].sort(ddCmp); return {spu,name:name0||spu,completion,received:rec,remaining:rem,purchase:pur,orders:pur,skus:[...skus.values()],dd:dds.length?dds[0]:'—'}; }
-function renderSvDetail(supplier, mon){ const tb=$('#svDetailTbl tbody'); if(!tb) return; let list=DATA.po.filter(r=>r.supplier===supplier); if(mon) list=list.filter(r=>r.month===mon); const rows=buildRows(list); if(!rows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">无数据</td></tr>'; return; } tb.innerHTML=rows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; const row=rows[+tr.dataset.ri]; if(row) openSpuModal(supplier,buildSpuRow(supplier,row.poNo,row.spu)); }; }
+function renderSvDetail(supplier, mon){ const tb=$('#svDetailTbl tbody'); if(!tb) return; let list=DATA.po.filter(r=>r.supplier===supplier); if(mon) list=list.filter(r=>r.month===mon); const rows=buildRows(list); const frows=filteredRows(rows, svColFilters); if(!frows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">'+(rows.length?'无匹配筛选数据':'无数据')+'</td></tr>'; svUpdateFilterUI(); return; } tb.innerHTML=frows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; const row=frows[+tr.dataset.ri]; if(row) openSpuModal(supplier,buildSpuRow(supplier,row.poNo,row.spu)); }; svUpdateFilterUI(); }
 
 /* ---------- 产线/时效聚合辅助 ---------- */
 function tagAgg(items, tagField){
@@ -1510,8 +1576,8 @@ function tagAgg(items, tagField){
     e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; e.sup.add(r.supplier);
     const spu=r.spu||r.materialCode||'—';
     const k=r.supplier+'\x00'+spu;
-    if(!e.spus.has(k)) e.spus.set(k,{spu,name:r.materialName||'',supplier:r.supplier,supplierShort:supShort(r.supplier),rec:0,rem:0,pur:0,dds:[]});
-    const s=e.spus.get(k); s.rec+=r.received||0; s.rem+=r.remaining||0; s.pur+=r.purchase||0; if(r.deliveryDate) s.dds.push(r.deliveryDate);
+    if(!e.spus.has(k)) e.spus.set(k,{spu,name:r.materialName||'',supplier:r.supplier,supplierShort:supShort(r.supplier),rec:0,rem:0,pur:0,dds:[],incDds:[]});
+    const s=e.spus.get(k); s.rec+=r.received||0; s.rem+=r.remaining||0; s.pur+=r.purchase||0; if(r.deliveryDate){ s.dds.push(r.deliveryDate); if((r.remaining||0)>0) s.incDds.push(r.deliveryDate); }
     const m=r.month||'—';
     if(!e.mons.has(m)) e.mons.set(m,{month:m,rec:0,rem:0,pur:0});
     const mo=e.mons.get(m); mo.rec+=r.received||0; mo.rem+=r.remaining||0; mo.pur+=r.purchase||0;
@@ -1601,17 +1667,10 @@ function renderTimeProgress(map, tag){
 }
 
 /* ---------- 标签 SPU 弹窗 ---------- */
-function openTagModal(kind, tag, sv, mv){
-  const ov=$('#tagModal'); if(!ov) return;
-  const tagField = kind==='line' ? 'lineTag' : 'timeTag';
-  const items = DATA.po.filter(r=>{ const t=(r[tagField]||'').trim(); if(t!==tag) return false; if(sv && sv!=='全部' && r.supplier!==sv) return false; if(mv && mv!=='全部' && r.month!==mv) return false; return true; });
-  const map=tagAgg(items, tagField);
-  const e=map.get(tag); if(!e) return;
+function buildSpusHtml(e){
   const spus=[...e.spus.values()].sort((a,b)=>b.pur-a.pur);
   const mons=[...e.mons.values()].sort(tagMonthSort);
   const totalProgress=e.pur>0?e.rec/e.pur*100:0;
-  ov.querySelector('.spu-modal-title').textContent = (kind==='line'?'产线：':'时效标签：')+tag;
-  ov.querySelector('.spu-modal-sub').textContent = '计划 '+fmt(e.pur)+' · 已收 '+fmt(e.rec)+' · 剩余 '+fmt(e.rem)+' · SPU '+spus.length+' · 供应商 '+e.sup.size;
   let html='<div style="margin-bottom:10px;"><b>总进度</b> '+pgCell(totalProgress)+'<span style="font-size:12px;color:var(--muted);margin-left:10px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</span></div>';
   if(mons.length){
     html+='<div style="margin-bottom:10px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
@@ -1619,16 +1678,58 @@ function openTagModal(kind, tag, sv, mv){
       + '</tbody></table>';
   }
   html+='<div style="margin-top:14px;"><b>SPU 列表</b></div><table class="mini"><thead><tr><th>SPU</th><th>物料名称</th><th>供应商简称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>完成率</th><th>交期</th></tr></thead><tbody>'
-    + spus.map((s,i)=>{ const di=daysInfo(s.dds.length?[...new Set(s.dds)].sort(ddCmp)[0]:null); return '<tr class="clickable" data-i="'+i+'"><td>'+s.spu+'</td><td>'+(s.name||'')+'</td><td title="'+escHtml(s.supplier)+'">'+(s.supplierShort||s.supplier)+'</td><td class="r">'+fmt(s.pur)+'</td><td class="r">'+fmt(s.rec)+'</td><td class="r">'+fmt(s.rem)+'</td><td>'+pgCell(s.pur>0?s.rec/s.pur*100:0)+'</td><td><span class="tag '+di.cls+'">'+di.txt+'</span></td></tr>'; }).join('')
+    + spus.map((s,i)=>{ const di=spuOverdueDi(s.dds, s.incDds, s.rec, s.rem, s.pur); return '<tr class="clickable" data-i="'+i+'"><td>'+s.spu+'</td><td>'+(s.name||'')+'</td><td title="'+escHtml(s.supplier)+'">'+(s.supplierShort||s.supplier)+'</td><td class="r">'+fmt(s.pur)+'</td><td class="r">'+fmt(s.rec)+'</td><td class="r">'+fmt(s.rem)+'</td><td>'+pgCell(s.pur>0?s.rec/s.pur*100:0)+'</td><td><span class="tag '+di.cls+'">'+di.txt+'</span></td></tr>'; }).join('')
     + '</tbody></table>';
+  return {html, spus};
+}
+function showSpusModal(title, sub, html, spus, drillFn){
+  const ov=$('#tagModal'); if(!ov) return;
+  ov.querySelector('.spu-modal-title').textContent=title;
+  ov.querySelector('.spu-modal-sub').textContent=sub;
   const body=$('#tagModalBody'); body.innerHTML=html;
-  body.onclick = ev=>{ const tr=ev.target.closest('tr[data-i]'); if(!tr) return; const s=spus[+tr.dataset.i]; if(!s) return; colFilters={}; colFilters[kind==='line'?'产线标签':'时效标签']={sel:new Set([tag]),text:''}; colFilters['SPU']={sel:new Set([s.spu]),text:''}; colFilters['供应商']={sel:new Set([s.supplier]),text:''}; if(mv && mv!=='全部') state.month=mv; closeTagModal(); goPage('detail'); };
+  body.onclick = ev=>{ const tr=ev.target.closest('tr[data-i]'); if(!tr) return; const s=spus[+tr.dataset.i]; if(!s) return; if(drillFn) drillFn(s); closeTagModal(); goPage('detail'); };
   ov.style.display='flex';
+}
+function buildDrill(o){
+  colFilters={};
+  if(o.supplier) colFilters['供应商']={sel:new Set([o.supplier]),text:''};
+  if(o.spu) colFilters['SPU']={sel:new Set([o.spu]),text:''};
+  if(o.month && o.month!=='全部') state.month=o.month;
+}
+function openTagModal(kind, tag, sv, mv){
+  const ov=$('#tagModal'); if(!ov) return;
+  const tagField = kind==='line' ? 'lineTag' : 'timeTag';
+  const items = DATA.po.filter(r=>{ const t=(r[tagField]||'').trim(); if(t!==tag) return false; if(sv && sv!=='全部' && r.supplier!==sv) return false; if(mv && mv!=='全部' && r.month!==mv) return false; return true; });
+  const map=tagAgg(items, tagField);
+  const e=map.get(tag); if(!e) return;
+  const {html, spus}=buildSpusHtml(e);
+  const sub='计划 '+fmt(e.pur)+' · 已收 '+fmt(e.rec)+' · 剩余 '+fmt(e.rem)+' · SPU '+spus.length+' · 供应商 '+e.sup.size;
+  showSpusModal((kind==='line'?'产线：':'时效标签：')+tag, sub, html, spus, s=>{
+    colFilters={}; colFilters[kind==='line'?'产线标签':'时效标签']={sel:new Set([tag]),text:''}; colFilters['SPU']={sel:new Set([s.spu]),text:''}; colFilters['供应商']={sel:new Set([s.supplier]),text:''}; if(mv && mv!=='全部') state.month=mv;
+  });
+}
+function aggRecs(recs){
+  const e={tag:'',rec:0,rem:0,pur:0,sup:new Set(),spus:new Map(),mons:new Map()};
+  for(const r of recs){
+    e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; e.sup.add(r.supplier);
+    const spu=r.spu||r.materialCode||'—'; const k=r.supplier+'\x00'+spu;
+    if(!e.spus.has(k)) e.spus.set(k,{spu,name:r.materialName||'',supplier:r.supplier,supplierShort:supShort(r.supplier),rec:0,rem:0,pur:0,dds:[],incDds:[]});
+    const s=e.spus.get(k); s.rec+=r.received||0; s.rem+=r.remaining||0; s.pur+=r.purchase||0; if(r.deliveryDate){ s.dds.push(r.deliveryDate); if((r.remaining||0)>0) s.incDds.push(r.deliveryDate); }
+    const m=r.month||'—'; if(!e.mons.has(m)) e.mons.set(m,{month:m,rec:0,rem:0,pur:0}); const mo=e.mons.get(m); mo.rec+=r.received||0; mo.rem+=r.remaining||0; mo.pur+=r.purchase||0;
+  }
+  return e;
+}
+function openRecsModal(title, recs, drillFn){
+  const ov=$('#tagModal'); if(!ov) return;
+  const e=aggRecs(recs); if(!e.spus.size) return;
+  const {html, spus}=buildSpusHtml(e);
+  const sub='计划 '+fmt(e.pur)+' · 已收 '+fmt(e.rec)+' · 剩余 '+fmt(e.rem)+' · SPU '+spus.length+' · 供应商 '+e.sup.size;
+  showSpusModal(title, sub, html, spus, drillFn);
 }
 function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none'; }
 
 /* ---------- 事件绑定 ---------- */
-['navWeekly','navSupplier','navLine','navTime'].forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(id.replace('nav','').toLowerCase())); });
+['navWeekly','navSupplier','navLine','navTime','navDetail'].forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(id.replace('nav','').toLowerCase())); });
 function bindFilter(selId, field, pageRender){
   const sel = $(selId); if(!sel) return;
   sel.addEventListener('change', ()=>{

@@ -3,139 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>在途数据V3</title>
-<meta name="description" content="在途数据V3：在途概览、供应商详情、月度数据、周计划模拟、新品排期、产线分析、时效分析。">
-<meta property="og:title" content="在途数据V3">
-<meta property="og:description" content="在途数据V3：在途概览、供应商详情、月度数据、周计划模拟、新品排期、产线分析、时效分析。">
+<title>供应商产能及在途数据</title>
+<meta name="description" content="供应商产能及在途数据：在途概览、供应商详情、月度数据、周计划模拟、新品排期、产线分析、时效分析。">
+<meta property="og:title" content="供应商产能及在途数据">
+<meta property="og:description" content="供应商产能及在途数据：在途概览、供应商详情、月度数据、周计划模拟、新品排期、产线分析、时效分析。">
 <meta property="og:type" content="website">
 <style>
 :root{
-  --bg:#f3f4f6;
-  --panel:#ffffff;
-  --ink:#1f2937;
-  --muted:#6b7280;
-  --line:#e5e7eb;
-  --primary:#2563eb;
-  --primary-soft:#e8f0fe;
-  --green:#2f9e44;
-  --green-soft:#ebfbee;
-  --amber:#e8920c;
-  --amber-soft:#fff4e6;
-  --slate:#868e96;
-  --slate-soft:#f1f3f5;
-  --plan:#1e3a8a;
-  --plan-soft:#e8f0fb;
-  --red:#e03131;
-  --red-soft:#fff0f0;
-  --violet:#7048e8;
-  --violet-soft:#f3f0ff;
-  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.06);
-  --radius:14px;
-  --font:"Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  /* ── PALETTE : 米白 / 炭灰 / 砂岩低饱和 ── */
+  --bg:#F5F2ED;
+  --bg2:#EDE9E1;
+  --panel:#FAFAF7;
+  --ink:#2C2C2C;
+  --muted:#8A8279;
+  --line:#DDD5C7;
+  --primary:#7D6E5C;
+  --primary-soft:#F0EBE4;
+  --green:#5B8068;
+  --green-soft:#EDF4EF;
+  --amber:#B08D55;
+  --amber-soft:#FBF5E6;
+  --slate:#8A8279;
+  --slate-soft:#F0ECE4;
+  --plan:#5B7080;
+  --plan-soft:#EEF2F4;
+  --red:#B85C38;
+  --red-soft:#FCEBE5;
+  --violet:#7B689E;
+  --violet-soft:#F0ECF5;
+  --shadow:0 1px 3px rgba(44,44,44,.05),0 8px 24px rgba(44,44,44,.06);
+  --radius:12px;
+  --font:"Inter","Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;}
+html,body{margin:0;padding:0;font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.6;}
 .app{display:flex;align-items:flex-start;min-height:100vh;}
 
-/* 1 标题导航栏（窄侧栏） */
+/* 1 标题导航栏（窄侧栏） — 极简哑光 */
 .sidebar{flex:0 0 220px;background:var(--panel);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;}
-.brand{position:relative;padding:20px 20px 16px;border-bottom:1px solid var(--line);}
-.brand-bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--primary),#374151);}
-.src-files{margin-top:10px;font-size:12px;line-height:1.5;}
-.sf-head{color:var(--muted);font-size:10px;letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase;}
+.brand{position:relative;padding:24px 20px 18px;border-bottom:1px solid var(--line);}
+.brand-bar{position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--primary),#A89B88);}
+.src-files{margin-top:10px;font-size:14px;line-height:1.5;}
+.sf-head{color:var(--muted);font-size:14px;letter-spacing:.12em;margin-bottom:4px;text-transform:uppercase;font-weight:600;}
 .sf-row{display:flex;align-items:center;gap:6px;padding:2px 0;min-width:0;}
-.sf-tag{flex:0 0 auto;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;}
-.sf-name{flex:1 1 auto;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sf-tag{flex:0 0 auto;background:var(--primary-soft);color:var(--primary);font-size:14px;font-weight:700;padding:1px 6px;border-radius:4px;}
+.sf-name{font-size:14px;}
 .sf-empty{color:var(--muted);font-style:italic;}
-.brand h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.01em;}
-.brand p{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.6;}
-.side-sec{padding:16px 18px 6px;}
+.brand h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);}
+.brand p{margin:8px 0 0;font-size:14px;color:var(--muted);line-height:1.7;}
+.side-sec{padding:18px 18px 8px;}
 .side-sec-mon{padding-bottom:0;}
-.side-sec h2{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:700;}
-.search{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;outline:none;background:#fbfcfd;transition:border-color .15s,box-shadow .15s;font-family:inherit;color:var(--ink);}
-.search:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);background:#fff;}
-.sup-list{display:flex;flex-wrap:wrap;gap:8px;padding:6px 18px 16px;align-content:flex-start;overflow-y:auto;flex:1;}
-.sup-list .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;background:#fff;border:1px solid var(--line);user-select:none;transition:all .12s;color:var(--ink);max-width:100%;}
+.side-sec h2{font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:700;}
+.search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;outline:none;background:var(--bg);transition:border-color .2s;box-shadow:none;font-family:inherit;color:var(--ink);letter-spacing:.01em;}
+.search:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);background:var(--panel);}
+.sup-list{display:flex;flex-wrap:wrap;gap:7px;padding:8px 18px 18px;align-content:flex-start;overflow-y:auto;flex:1;}
+.sup-list .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:999px;font-size:14px;cursor:pointer;background:var(--panel);border:1px solid var(--line);user-select:none;transition:all .15s;color:var(--ink);max-width:100%;letter-spacing:.01em;}
 .sup-list .chip:hover{border-color:var(--primary);color:var(--primary);}
-.sup-list .chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-.sup-list .chip .chip-badge{font-size:11px;color:var(--slate);background:var(--slate-soft);border-radius:999px;padding:1px 7px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
-.sup-list .chip.active .chip-badge{background:rgba(255,255,255,.22);color:#fff;}
-.mon-chips{display:flex;flex-wrap:wrap;gap:8px;padding:6px 18px 16px;}
-.chip{padding:6px 13px;border:1px solid var(--line);border-radius:999px;font-size:13px;cursor:pointer;background:#fff;user-select:none;transition:all .12s;color:var(--ink);}
+.sup-list .chip.active{background:var(--ink);color:#FAFAF7;border-color:var(--ink);}
+.sup-list .chip .chip-badge{font-size:14px;color:var(--slate);background:var(--slate-soft);border-radius:999px;padding:1px 7px;flex:0 0 auto;font-variant-numeric:tabular-nums;}
+.sup-list .chip.active .chip-badge{background:rgba(250,250,247,.2);color:#DDD5C7;}
+.mon-chips{display:flex;flex-wrap:wrap;gap:7px;padding:8px 18px 18px;}
+.chip{padding:6px 14px;border:1px solid var(--line);border-radius:999px;font-size:14px;cursor:pointer;background:var(--panel);user-select:none;transition:all .15s;color:var(--ink);letter-spacing:.01em;}
 .chip:hover{border-color:var(--primary);color:var(--primary);}
-.chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-.reset{margin-top:auto;border-top:1px solid var(--line);padding:14px 18px 18px;}
-.reset a{font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;}
-.reset{margin-top:auto;border-top:1px solid var(--line);padding:14px 18px 18px;}
-.reset a{font-size:12px;color:var(--primary);cursor:pointer;text-decoration:none;}
-/* 导航分组（横向） */
-.nav-group{padding:10px 14px 0;}
-.nav-group-label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px 12px;font-weight:700;}
-.nav{display:flex;flex-direction:column;gap:6px;padding:4px 14px 12px;}
-.navbtn{padding:8px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;cursor:pointer;background:#fff;color:var(--ink);font-family:inherit;transition:all .12s;text-align:left;display:flex;align-items:center;gap:7px;}
+.chip.active{background:var(--ink);color:#FAFAF7;border-color:var(--ink);}
+.reset{margin-top:auto;border-top:1px solid var(--line);padding:16px 18px 18px;}
+.reset a{font-size:14px;color:var(--primary);cursor:pointer;text-decoration:none;letter-spacing:.02em;font-weight:600;}
+/* 导航分组（横向） — 极简细线 */
+.nav-group{padding:12px 14px 0;}
+.nav-group-label{font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 14px;font-weight:700;}
+.nav{display:flex;flex-direction:column;gap:5px;padding:6px 14px 14px;}
+.navbtn{padding:9px 13px;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;background:var(--panel);color:var(--ink);font-family:inherit;transition:all .15s;text-align:left;display:flex;align-items:center;gap:7px;letter-spacing:.02em;font-weight:500;}
 .navbtn:hover{border-color:var(--primary);color:var(--primary);}
-.navbtn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.navbtn.active{background:var(--ink);color:#FAFAF7;border-color:var(--ink);}
 .main[hidden]{display:none;}
 
 
-/* 2 总数据栏目 */
-.col-total{flex:0 0 384px;background:#fafbfc;border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow:auto;}
-.col-head{padding:20px 20px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fafbfc;z-index:2;}
-.col-head h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700;}
-.col-body{padding:16px 16px 28px;display:flex;flex-direction:column;gap:16px;}
-.tcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 16px;}
-.tcard h3{margin:0 0 14px;font-size:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.tcard h3 .hint{font-size:11px;color:var(--muted);font-weight:400;}
-.mini-wrap{margin-top:4px;}
-table.mini{width:100%;border-collapse:collapse;font-size:12.5px;}
-table.mini th,table.mini td{padding:9px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
-table.mini th{color:var(--muted);font-weight:700;font-size:12.5px;letter-spacing:.03em;text-align:left;background:transparent;}
+/* 2 总数据栏目 — 哑光宽裕 */
+.col-total{flex:0 0 384px;background:var(--panel);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow:auto;}
+.col-head{padding:22px 20px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2;}
+.col-head h2{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700;}
+.col-body{padding:18px 18px 32px;display:flex;flex-direction:column;gap:18px;}
+.tcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:none;padding:18px 20px;}
+.tcard h3{margin:0 0 16px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
+.tcard h3 .hint{font-size:15px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none;}
+.mini-wrap{margin-top:6px;}
+table.mini{width:100%;border-collapse:collapse;font-size:13px;}
+table.mini th,table.mini td{padding:7px 11px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+table.mini th{color:var(--muted);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;text-align:left;background:transparent;}
 table.mini td.r,table.mini th.r{text-align:right;}
-table.mini tbody tr:hover{background:#f7f9fc;}
+table.mini tbody tr:hover{background:var(--bg);}
 table.mini tbody tr.sel{background:var(--primary-soft);}
 table.mini tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
-.mini-foot{margin-top:10px;font-size:12px;color:var(--muted);}
+.mini-foot{margin-top:10px;font-size:14px;color:var(--muted);}
 .mini-foot b{color:var(--ink);font-weight:600;}
 
-/* 3 主区 */
-.main{flex:1;min-width:0;padding:22px 26px 40px;}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
-.crumb{font-size:16px;font-weight:600;letter-spacing:.01em;}
-.crumb .sub{font-weight:400;color:var(--muted);font-size:13px;margin-left:8px;}
+/* 产能负荷率分布图 V2（双栏布局） */
+.cap-dist-split{display:flex;gap:18px;align-items:stretch;}
+.cap-dist-left{flex:0 0 48%;display:flex;flex-direction:column;gap:5px;min-width:0;}
+.cap-dist-right{flex:1;background:var(--bg);border-radius:8px;border:0.5px solid var(--line);padding:12px 14px;min-width:0;}
+.cap-dist-tier{display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;padding:5px 8px;transition:background .12s;}
+.cap-dist-tier:hover{background:var(--bg);}
+.cap-dist-tier-label{flex:0 0 52px;font-size:14px;font-weight:600;text-align:right;}
+.cap-dist-tier-bar{flex:1;height:22px;border-radius:4px;position:relative;overflow:hidden;background:#f0f0f0;min-width:40px;}
+.cap-dist-tier-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px 0 0 4px;min-width:3px;}
+.cap-dist-tier-count{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:600;color:#333;z-index:1;}
+/* 超载面板 */
+.cap-overload-title{font-size:14px;font-weight:600;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.cap-overload-dot{width:8px;height:8px;border-radius:50%;background:var(--red);}
+.cap-overload-table{font-size:14px;}
+.cap-overload-table th,.cap-overload-table td{padding:4px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.cap-overload-table th{color:var(--muted);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;text-align:left;}
+.cap-overload-table td{text-align:right;}
+.cap-overload-table td:first-child{text-align:left;}
+.cap-overload-more{font-size:14px;color:var(--muted);text-align:center;}
+/* 弹窗 */
+.cap-modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
+.cap-modal-mask.open{display:flex;}
+.cap-modal{background:#fff;border-radius:10px;width:780px;max-height:630px;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.15);}
+.cap-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:0.5px solid var(--line);}
+.cap-modal-head h3{margin:0;font-size:14px;font-weight:600;}
+.cap-modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:0 4px;}
+.cap-modal-body{padding:12px 18px;overflow:auto;flex:1;}
+.cap-modal-table{font-size:14px;}
+.cap-modal-table th,.cap-modal-table td{padding:6px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.cap-modal-table th{color:var(--muted);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;text-align:left;}
+.cap-modal-table td.r{text-align:right;}
+.cap-dist-empty{padding:14px 8px;font-size:12.5px;color:var(--muted);}
+@media(max-width:1140px){ .cap-dist-split{flex-direction:column;} .cap-dist-left{flex:1;} }
+
+/* 3 主区 — 宽松网格 */
+.main{flex:1;min-width:0;padding:28px 32px 48px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:0;background:var(--bg);z-index:10;padding:12px 0;border-bottom:1px solid var(--line);border-radius:0;margin-left:-32px;margin-right:-32px;padding-left:32px;padding-right:32px;}
+.topbar-left{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.crumb{font-size:16px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);}
+.crumb .sub{font-weight:400;color:var(--muted);font-size:14px;margin-left:8px;text-transform:none;}
 .imp{display:flex;gap:8px;flex-wrap:wrap;}
-.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .12s;font-family:inherit;color:var(--ink);}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit;color:var(--ink);letter-spacing:.03em;font-weight:500;}
 .btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
-.note{font-size:11.5px;color:var(--muted);background:#fbfcfd;border:1px dashed var(--line);border-radius:9px;padding:9px 13px;margin-bottom:16px;line-height:1.7;}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:16px;}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
-.kpi .label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;}
-.kpi .val{font-size:23px;font-weight:700;margin-top:7px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
-.kpi .unit{font-size:12px;color:var(--muted);font-weight:500;margin-left:3px;}
-.kpi .bar{height:6px;border-radius:999px;background:#eef1f5;margin-top:11px;overflow:hidden;}
+.note{font-size:14px;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:11px 15px;margin-bottom:18px;line-height:1.8;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:14px;margin-bottom:20px;}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:none;}
+.kpi .label{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:7px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;}
+.kpi .val{font-size:26px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--ink);}
+.kpi .unit{font-size:14px;color:var(--muted);font-weight:500;margin-left:3px;}
+.kpi .bar{height:5px;border-radius:999px;background:var(--bg2);margin-top:12px;overflow:hidden;}
 .kpi .bar > i{display:block;height:100%;border-radius:999px;}
-.swatch{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto;}
-.panels{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;align-items:start;margin-bottom:16px;}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;}
+.swatch{width:8px;height:8px;border-radius:2px;display:inline-block;flex:0 0 auto;}
+.panels{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start;margin-bottom:20px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:none;padding:20px 22px;}
 .card-full{grid-column:1 / -1;}
-.upper-split{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:16px;align-items:start;margin-bottom:16px;}
-.upper-left{display:flex;flex-direction:column;gap:16px;}
-.donut-row{display:flex;flex-direction:row;gap:16px;flex-wrap:wrap;}
+.upper-split{display:grid;grid-template-columns:minmax(280px,340px) 1fr;gap:18px;align-items:start;margin-bottom:20px;}
+.upper-left{display:flex;flex-direction:column;gap:18px;}
+.donut-row{display:flex;flex-direction:row;gap:18px;flex-wrap:wrap;}
 .donut-row>.card{flex:1 1 220px;min-width:200px;}
 .spu-cell{cursor:pointer;color:var(--primary);font-weight:600;}
-.spu-cell .caret{font-size:10px;margin-left:3px;opacity:.6;}
+.spu-cell .caret{font-size:14px;margin-left:3px;opacity:.5;}
 .upper-right{height:100%;}
-.card h3{margin:0 0 14px;font-size:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
-.card h3 .hint{font-size:12px;color:var(--muted);font-weight:400;}
+.card h3{margin:0 0 16px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);}
+.card h3 .hint{font-size:14px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;}
 .chart-wrap{width:100%;overflow:hidden;}
 svg{display:block;width:100%;height:auto;}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap;}
+.legend{font-size:14px;color:var(--muted);margin-top:10px;flex-wrap:wrap;}
 .legend span{display:inline-flex;align-items:center;gap:5px;}
-.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
-.donut-info{font-size:13px;line-height:1.7;}
-.donut-info b{font-size:22px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th,td{padding:10px 14px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;cursor:default;}
-th{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.02em;position:sticky;top:0;background:#fff;text-align:left;}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.donut-info{font-size:12.5px;line-height:1.8;color:var(--ink);}
+.donut-info b{font-size:22px;font-weight:700;color:var(--ink);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{padding:11px 15px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;cursor:default;}
+th{color:var(--muted);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;position:sticky;top:0;background:var(--panel);text-align:left;}
 td.num{text-align:right;}
 #tbl th:nth-child(1){width:122px;}
 #tbl th:nth-child(2){width:150px;}
@@ -146,42 +181,54 @@ td.num{text-align:right;}
 #tbl th:nth-child(10){width:80px;}
 #tbl td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #tbl th{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tbl-scroll{max-height:880px;overflow:auto;border:1px solid var(--line);border-radius:9px;}
+.tbl-scroll{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+.tbl-scroll > table{margin:0;min-width:max-content;}
+.tbl-scroll thead th{position:sticky;top:0;background:var(--panel);z-index:3;box-shadow:inset 0 -1px 0 var(--line);}
+.wk-sum{font-weight:600;}
+.modal-legend{font-size:14px;color:var(--muted);margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.modal-legend .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle;}
 .two-col{display:flex;gap:16px;flex-wrap:wrap;}
 .two-col>.tcard{flex:1;min-width:300px;}
 #tbl{table-layout:fixed;}
-.pct{display:inline-block;min-width:44px;text-align:right;font-weight:600;}
-.pgrow{display:flex;align-items:center;gap:8px;}
-.pg{height:6px;border-radius:999px;background:#eef1f5;flex:1;overflow:hidden;min-width:54px;}
+.pct{display:inline-block;min-width:34px;text-align:right;font-weight:600;white-space:nowrap;}
+.pgrow{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap;}
+.pg{height:5px;border-radius:999px;background:var(--bg2);flex:1;overflow:hidden;min-width:40px;}
 .pg > i{display:block;height:100%;}
+/* 弹窗内紧凑进度条（更克制、不突兀） */
+.pgmini{display:inline-flex;align-items:center;gap:5px;width:100%;white-space:nowrap;flex-wrap:nowrap;}
+.pgmini-pct{font-size:14px;font-weight:600;min-width:30px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.pgmini-bar{position:relative;flex:1;height:6px;border-radius:999px;background:var(--bg2);overflow:hidden;min-width:36px;}
+.pgmini-bar > i{position:absolute;left:0;top:0;height:100%;border-radius:999px;transition:width .2s;}
+/* 弹窗汇总行 */
+.sum-row td{background:var(--bg2);}
 /* 明细表总计行 */
-#tbl tfoot td{padding:13px 14px;border-top:2px solid var(--ink);border-bottom:none;background:#f6f8fa;font-weight:700;color:var(--ink);}
+#tbl tfoot td{padding:14px 15px;border-top:2px solid var(--line);border-bottom:none;background:var(--bg);font-weight:700;color:var(--ink);}
 #tbl tfoot td.num{text-align:right;}
-#tbl tfoot .pg-cell{padding:8px 14px;}
+#tbl tfoot .pg-cell{padding:8px 15px;}
 #tbl tfoot .pgrow .pg{min-width:70px;}
-.tag{font-size:11px;padding:1px 7px;border-radius:999px;}
-.tag.ok{background:var(--green-soft);color:#2b8a3e;}
-.tag.over{background:var(--red-soft);color:#c92a2a;}
-.tag.wait{background:#fff4e6;color:#e8920c;border:1px solid #f0c674;}
+.tag{font-size:10.5px;padding:2px 8px;border-radius:999px;letter-spacing:.02em;font-weight:600;}
+.tag.ok{background:var(--green-soft);color:var(--green);}
+.tag.over{background:var(--red-soft);color:var(--red);}
+.tag.wait{background:var(--amber-soft);color:var(--amber);border:1px solid #E5DCC8;}
 .clickable{cursor:pointer;}
-.spu-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
-.spu-modal-card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(720px,94vw);max-height:86vh;display:flex;flex-direction:column;padding:20px 22px;}
-.spu-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;}
-.spu-modal-title{font-size:16px;font-weight:700;}
+.spu-modal{position:fixed;inset:0;background:rgba(44,44,44,.35);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.spu-modal-card{background:var(--panel);border-radius:14px;box-shadow:0 16px 48px rgba(44,44,44,.12);width:min(1080px,94vw);max-height:90vh;display:flex;flex-direction:column;padding:36px 38px;border:1px solid var(--line);}
+.spu-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px;}
+.spu-modal-title{font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
 .spu-modal-body{overflow:auto;}
 .clickable:hover{background:var(--primary-soft);}
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:80;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#FAFAF7;padding:12px 20px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:80;letter-spacing:.02em;font-weight:500;}
 .toast.show{opacity:1;}
-.supplier-banner{text-align:center;font-size:15px;font-weight:700;color:var(--primary);letter-spacing:.02em;padding:2px 0 12px;}
-.empty{color:var(--muted);text-align:center;padding:28px 0;font-size:13px;}
-.pop{position:fixed;z-index:90;background:#1f2733;color:#fff;padding:9px 12px;border-radius:8px;font-size:12px;max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:none;pointer-events:none;}
-.pop b{color:#a5b4fc;}
-.chart-tip{position:fixed;z-index:95;background:rgba(31,39,51,.96);color:#fff;padding:10px 12px;border-radius:10px;font-size:12px;min-width:150px;box-shadow:0 8px 26px rgba(0,0,0,.28);display:none;pointer-events:none;line-height:1.7;}
-.chart-tip .tip-h{font-weight:600;margin-bottom:6px;font-size:12.5px;}
+.supplier-banner{text-align:center;font-size:14px;font-weight:700;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;padding:2px 0 14px;}
+.empty{color:var(--muted);text-align:center;padding:32px 0;font-size:13.5px;letter-spacing:.02em;}
+.pop{position:fixed;z-index:90;background:var(--ink);color:#FAFAF7;padding:10px 14px;border-radius:8px;font-size:14px;max-width:260px;box-shadow:0 8px 24px rgba(44,44,44,.2);display:none;pointer-events:none;letter-spacing:.01em;}
+.pop b{color:#DDD5C7;}
+.chart-tip{font-size:14px;min-width:150px;box-shadow:0 8px 24px rgba(44,44,44,.2);display:none;pointer-events:none;line-height:1.8;}
+.chart-tip .tip-h{font-weight:700;margin-bottom:6px;font-size:13px;letter-spacing:.03em;text-transform:uppercase;}
 .chart-tip .tip-row{display:flex;align-items:center;gap:7px;justify-content:space-between;}
 .chart-tip .tip-row b{font-variant-numeric:tabular-nums;margin-left:10px;}
-.chart-tip .tip-row .dot{width:8px;height:8px;border-radius:3px;display:inline-block;flex:0 0 auto;}
-.chart-tip .tip-pct{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.15);color:#c7d2fe;}
+.chart-tip .tip-row .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex:0 0 auto;}
+.chart-tip .tip-pct{margin-top:6px;padding-top:6px;border-top:1px solid rgba(250,250,247,.15);color:#DDD5C7;}
 .bar{transition:opacity .1s;}
 .bar:hover{opacity:.82;}
 
@@ -189,18 +236,18 @@ td.num{text-align:right;}
 .ov-flex{display:flex;gap:18px;align-items:stretch;}
 .ov-chart{flex:0 0 44%;min-width:0;}
 .ov-table{flex:1 1 56%;min-width:0;}
-.ov-chart .chart-wrap{font-size:11px;}
-.ov-table .mini{font-size:12px;}
+.ov-chart .chart-wrap{font-size:13px;}
+.ov-table .mini{font-size:14px;}
 
 /* 时效分析：标签切换与进度面板 */
 .tm-tag-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
 .tm-tag-bar > div{display:flex;gap:8px;flex-wrap:wrap;}
-.tm-tag-bar .chip{font-size:12px;padding:5px 12px;}
+.tm-tag-bar .chip{font-size:14px;padding:5px 12px;}
 .tm-split{display:grid;grid-template-columns:0.95fr 1.45fr;gap:16px;align-items:start;margin-bottom:16px;}
-#tmProgressBody .mini{font-size:12px;}
-#tmProgressBody .pgrow{font-size:12px;}
+#tmProgressBody .mini{font-size:14px;}
+#tmProgressBody .pgrow{font-size:14px;}
 
-/* 响应式 */
+/* 响应式 — 宽松断点 */
 @media (max-width:1240px){
   .app{flex-wrap:wrap;}
   .sidebar{flex:0 0 220px;position:sticky;top:0;height:100vh;}
@@ -209,46 +256,93 @@ td.num{text-align:right;}
   .upper-split{grid-template-columns:minmax(240px,260px) 1fr;}
   .tm-split{grid-template-columns:1fr;}
 }
-@media (max-width:760px){
+@media (max-width:1140px){
   .app{display:block;}
   .sidebar{position:static;height:auto;width:100%;}
   .nav{flex-direction:row;flex-wrap:wrap;}
-  .navbtn{flex:1 1 auto;min-width:0;text-align:center;justify-content:center;font-size:12px;padding:7px 8px;}
-  .main{padding:16px;}
+  .navbtn{flex:1 1 auto;min-width:0;text-align:center;justify-content:center;font-size:14px;padding:8px 10px;}
+  .main{padding:18px;}
   .panels{grid-template-columns:1fr;}
-  .ov-flex{flex-direction:column;gap:14px;}
+  .ov-flex{flex-direction:column;gap:16px;}
   .ov-chart,.ov-table{flex:1 1 auto;width:100%;}
   .upper-split{grid-template-columns:1fr;}
   .upper-left{flex-direction:row;flex-wrap:wrap;}
   .upper-left>.card{flex:1 1 220px;min-width:200px;}
 }
 @media (max-width:560px){
-  .kpi .val{font-size:20px;}
+  .kpi .val{font-size:22px;}
   .topbar{flex-direction:column;align-items:flex-start;}
-  .card{padding:12px 14px;}
+  .card{padding:14px 16px;}
   .tbl-scroll{max-height:640px;}
 }
+.collapse-btn{ cursor:pointer; border:none; background:transparent; font-size:14px; color:var(--muted); margin-right:6px; padding:0 2px; line-height:1; }
+.collapse-btn:hover{ color:var(--primary); }
+.card.collapsed > *:not(h3), .tcard.collapsed > *:not(h3){ display:none; }
+.card > h3{ display:flex; align-items:center; }
+.tbl-scroll table, table.mini{ table-layout: auto; }
+#monCompareTable{ table-layout:fixed !important; width:100%; min-width:0; }
+#monCompareTable th,#monCompareTable td{ padding:7px 8px !important; }
+#monCompareTable th:nth-child(1){width:13%;} /* 供应商 */
+#monCompareTable th:nth-child(2){width:7%;} /* SPU数 */
+#monCompareTable th:nth-child(3){width:12%;} /* 计划 */
+#monCompareTable th:nth-child(4){width:11%;} /* 已收 */
+#monCompareTable th:nth-child(5){width:11%;} /* 剩余 */
+#monCompareTable th:nth-child(6){width:12%;} /* 已占用 */
+#monCompareTable th:nth-child(7){width:13%;} /* 剩余产能 */
+#monCompareTable th:nth-child(8){width:12%;} /* 周在途 */
+/* 右栏排序列表列宽 */
+#monRankTable{ table-layout:fixed !important; width:100%; }
+#monRankTable th,#monRankTable td{ padding:7px 8px !important; }
+#monRankTable th:nth-child(1){width:40px;} /* 排名 */
+#monRankTable th:nth-child(2){width:26%;} /* 供应商 */
+#monRankTable th:nth-child(3){width:24%;} /* 在途 */
+#monRankTable th:nth-child(4){width:24%;} /* 计划 */
+#monRankTable th:nth-child(5){width:60px;} /* SPU数 */
+/* 全局可点击链接统一样式（与产线/时效「详情」链接一致） */
+a.spu-count, a.wk-spu-link, a.wk-cap-link, a.spu-link, a.spu-sku-link{ color:var(--primary)!important; text-decoration:underline; cursor:pointer; }
+a.spu-count:hover, a.wk-spu-link:hover, a.wk-cap-link:hover, a.spu-link:hover, a.spu-sku-link:hover{ color:var(--primary-hover,var(--primary))!important; }
+.tbl-scroll th, .tbl-scroll td, table.mini th, table.mini td{ box-sizing:border-box; }
+/* 周计划模拟 - 供应商负荷对比表紧缩列宽 */
+#wkTbl{ table-layout:fixed !important; width:100%; font-size:14px; }
+#wkTbl th,#wkTbl td{ padding:7px 8px !important; font-size:14px; }
+#wkTbl th:nth-child(1){width:11%;} /* 供应商 */
+#wkTbl th:nth-child(2){width:6%;} /* 月份 */
+#wkTbl th:nth-child(3){width:9%;text-align:right;} /* 在途数量 */
+#wkTbl th:nth-child(4){width:10%;text-align:right;} /* 周计划数量 */
+#wkTbl th:nth-child(5){width:9%;text-align:right;} /* 现有负荷率 */
+#wkTbl th:nth-child(6){width:10%;text-align:right;} /* 本周计划负荷率 */
+#wkTbl th:nth-child(7){width:9%;text-align:right;} /* 剩余产能 */
+#wkTbl th:nth-child(8){width:17%;} /* 周产能占用明细 */
+#wkTbl th:nth-child(9){width:9%;} /* 待交货日期 */
+/* 周计划明细表 */
+#wkDetailTbl{ table-layout:fixed !important; width:100%; }
+#wkDetailTbl th,#wkDetailTbl td{ padding:7px 8px !important; font-size:14px; }
+#wkDetailTbl th:nth-child(1){width:16%;} /* 供应商 */
+#wkDetailTbl th:nth-child(2){width:12%;} /* SPU */
+#wkDetailTbl th:nth-child(3){width:9%;text-align:right;} /* 订单数 */
+#wkDetailTbl th:nth-child(4){width:36%;} /* 物料名称 */
+#wkDetailTbl th:nth-child(5){width:16%;} /* 待交货日期 */
 </style>
 <style>
-.flt{ cursor:pointer; color:#9aa4b2; font-size:10px; margin-left:4px; user-select:none; vertical-align:middle; }
-.flt:hover, .flt.on{ color:#2563eb; }
-#tbl thead th.filtered{background:#eaf1fe;box-shadow:inset 0 -3px 0 #2563eb;}
-#tbl thead th.filtered .flt{color:#2563eb;font-weight:700;}
-#tbl thead th.filtered .flt::after{content:' ●';font-size:8px;vertical-align:middle;}
+.flt{cursor:pointer;color:var(--muted);font-size:14px; margin-left:4px; user-select:none; vertical-align:middle; letter-spacing:.02em; font-weight:500;}
+.flt:hover, .flt.on{ color:var(--primary); }
+#tbl thead th.filtered{background:var(--primary-soft);box-shadow:inset 0 -3px 0 var(--primary);}
+#tbl thead th.filtered .flt{color:var(--primary);font-weight:700;}
+#tbl thead th.filtered .flt::after{content:" ●";font-size:13px;vertical-align:middle;}
 .flt.on{ font-weight:700; }
-.filter-panel{ position:fixed; z-index:60; background:#fff; border:1px solid #d7dce5; border-radius:10px; box-shadow:0 12px 40px rgba(15,23,42,.18); width:248px; padding:10px; font-size:13px; color:#1f2937; }
-.fp-head{ display:flex; justify-content:space-between; align-items:center; font-weight:600; margin-bottom:8px; }
-.fp-x{ border:none; background:#f1f3f7; border-radius:6px; width:22px; height:22px; cursor:pointer; line-height:1; }
+.filter-panel{ position:fixed; z-index:60; background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 36px rgba(44,44,44,.12); width:248px; padding:12px; font-size:12.5px; color:var(--ink); }
+.fp-head{ display:flex; justify-content:space-between; align-items:center; font-weight:700; margin-bottom:8px; letter-spacing:.04em;text-transform:uppercase;font-size:14px;color:var(--ink); }
+.fp-x{ border:none; background:var(--bg2); border-radius:6px; width:22px; height:22px; cursor:pointer;line-height:1;color:var(--muted);}
 .fp-search{ width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #d7dce5; border-radius:8px; margin-bottom:8px; }
 .fp-actions{ display:flex; gap:6px; margin-bottom:8px; }
-.fp-actions button, .fp-apply{ border:1px solid #d7dce5; background:#f7f9fc; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:12px; }
+.fp-actions button, .fp-apply{ border:1px solid #d7dce5; background:#f7f9fc; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:13px; }
 .fp-list{ max-height:220px; overflow:auto; border:1px solid #eef1f6; border-radius:8px; padding:4px; }
 .fp-item{ display:flex; align-items:center; gap:6px; padding:3px 4px; border-radius:6px; cursor:pointer; }
 .fp-item:hover{ background:#f1f5ff; }
 .fp-foot{ margin-top:8px; text-align:right; }
-.fp-apply{ background:#2563eb; color:#fff; border-color:#2563eb; }
-.btn-sm{ border:1px solid #d7dce5; background:#f7f9fc; border-radius:8px; padding:3px 10px; font-size:12px; cursor:pointer; margin-left:8px; color:#1f2937; }
-.btn-sm:hover{ background:#eef2ff; border-color:#2563eb; color:#2563eb; }
+.fp-apply{ background:var(--ink); color:#FAFAF7; border-color:var(--ink); }
+.btn-sm{font-size:14px; cursor:pointer; margin-left:8px; color:var(--ink);letter-spacing:.01em; }
+.btn-sm:hover{ background:var(--primary-soft); border-color:var(--primary); color:var(--primary); }
 </style>
 </head>
 <body>
@@ -257,7 +351,7 @@ td.num{text-align:right;}
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-bar"></div>
-      <h1>在途数据V3</h1>
+      <h1>供应商产能及在途数据</h1>
       <p id="srcInfo">加载中…</p>
       <div id="srcFiles" class="src-files"></div>
     </div>
@@ -281,6 +375,21 @@ td.num{text-align:right;}
         <button class="navbtn" id="navLine" type="button">🏗️ 产线分析</button>
         <button class="navbtn" id="navTime" type="button">⏱️ 时效分析</button>
       </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">工具</div>
+      <div class="nav">
+        <button class="navbtn" id="navTool" type="button">🧮 预估产能计算</button>
+        <button class="navbtn" id="navSpu" type="button">🔍 SPU 查询</button>
+      </div>
+    </div>
+
+    <!-- 导入按钮 -->
+    <div class="side-sec" style="padding:12px 18px;display:flex;flex-direction:column;gap:6px;">
+      <button class="btn" id="impPo" title="重新解析采购订单文件(Sheet1 原始格式：由交货日期推导月份，过滤业务关闭=正常)" style="width:100%;font-size:14px;padding:7px 10px;">⬆ 导入订单更新</button>
+      <button class="btn" id="impCap" title="重新解析供应商产能信息表(Sheet1)" style="width:100%;font-size:14px;padding:7px 10px;">⬆ 导入产能更新</button>
+      <input type="file" id="filePo" accept=".xlsx,.xls" style="display:none">
+      <input type="file" id="fileCap" accept=".xlsx,.xls" style="display:none">
     </div>
 
     <div class="reset"><a id="resetBtn">↺ 重置筛选</a></div>
@@ -325,20 +434,38 @@ td.num{text-align:right;}
     </div>
     <!-- 明细视图（默认隐藏，点击切换显示） -->
     <main class="main" id="detailView" style="display:none;padding:0 26px 40px;">
-    <div class="topbar">
+    <div class="topbar" id="detailTopbar">
+
+      <div class="topbar-left">
+      </div>
 
       <div class="crumb" id="crumb">全部供应商 <span class="sub">/ 全部月份</span></div>
+
       <div class="imp">
+        <button class="btn btn-sm" id="btnRefresh" type="button" title="刷新筛选（不重置导入数据）">↻ 刷新</button>
         <span style="font-size:13px;color:var(--muted)">供应商</span><select id="dtSup" class="btn" style="padding:6px 10px;"></select>
         <span style="font-size:13px;color:var(--muted)">月份</span><select id="dtMon" class="btn" style="padding:6px 10px;"></select>
-        <button class="btn" id="impPo" title="重新解析采购订单文件(Sheet1 原始格式：由交货日期推导月份，过滤业务关闭=正常)">⬆ 导入订单更新</button>
-        <button class="btn" id="impCap" title="重新解析供应商产能信息表(Sheet1)">⬆ 导入产能更新</button>
-        <input type="file" id="filePo" accept=".xlsx,.xls" style="display:none">
-        <input type="file" id="fileCap" accept=".xlsx,.xls" style="display:none">
+        <button class="btn" id="toggleDetail" type="button">📋 切换明细</button>
       </div>
     </div>
     <div class="supplier-banner" id="supplierBanner"></div>
     <div class="note" id="noteLegend"></div>
+
+    <!-- 产能负荷率分布（顶部双栏） -->
+    <div class="card card-full" id="capDistCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <h3 style="margin:0;">产能负荷率分布 <span class="hint" id="capDistHint"></span></h3>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select id="capDistMon" style="padding:3px 7px;font-size:14px;border:0.5px solid var(--line);border-radius:5px;background:#fff;"></select>
+          <input id="capDistSupSearch" placeholder="搜索供应商..." style="padding:3px 8px;font-size:14px;border:0.5px solid var(--line);border-radius:5px;width:130px;" />
+          <input id="capDistFrom" type="month" style="padding:3px 6px;font-size:14px;border:0.5px solid var(--line);border-radius:5px;width:115px;" />
+        </div>
+      </div>
+      <div class="cap-dist-split">
+        <div class="cap-dist-left" id="capDistLeft"></div>
+        <div class="cap-dist-right" id="capDistRight"></div>
+      </div>
+    </div>
 
     <div class="kpis" id="kpis"></div>
 
@@ -361,12 +488,27 @@ td.num{text-align:right;}
       </div>
       <div class="upper-right">
         <div class="card card-full">
-          <h3 id="chartTitle">趋势 <span class="hint" id="chartHint"></span></h3>
-          <div class="chart-wrap" id="chart"></div>
-          <div class="legend">
-            <span><i class="swatch" style="background:var(--green)"></i>已收料</span>
-            <span><i class="swatch" style="background:var(--amber)"></i>剩余收料</span>
-            <span><i class="swatch" style="background:var(--plan)"></i>总计划</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <h3 id="chartTitle" style="margin:0;">趋势 <span class="hint" id="chartHint"></span></h3>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span style="font-size:14px;color:var(--muted);font-weight:600;">粒度</span>
+              <select id="chartGran" class="btn" style="padding:4px 8px;font-size:13px;"><option value="month">按月</option><option value="week" selected>按周</option></select>
+              <span style="font-size:14px;color:var(--muted);font-weight:600;">月份</span>
+              <select id="chartMonSel" class="btn" style="padding:4px 8px;font-size:13px;"><option value="">全部</option></select>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start;">
+            <div style="flex:0 0 46%;min-width:0;">
+              <div class="chart-wrap" id="chart" style="max-height:280px;"></div>
+              <div class="legend">
+                <span><i class="swatch" style="background:var(--green)"></i>已收料</span>
+                <span><i class="swatch" style="background:var(--amber)"></i>剩余收料</span>
+                <span><i class="swatch" style="background:var(--plan)"></i>总计划</span>
+              </div>
+            </div>
+            <div style="flex:1;min-width:240px;">
+              <table class="mini" id="chartSummaryTbl" style="table-layout:fixed;width:100%;font-size:14px;"><thead><tr><th>周期</th><th class="r">已收</th><th class="r">剩余</th><th class="r">计划</th></tr></thead><tbody><tr><td colspan="4" style="padding:16px;color:var(--muted);text-align:center;">选择粒度后显示汇总</td></tr></tbody></table>
+            </div>
           </div>
         </div>
       </div>
@@ -385,6 +527,7 @@ td.num{text-align:right;}
       </div>
     </div>
   </main>
+  </section>
 
   <!-- 周计划模拟 -->
   <section class="main" id="pageWeekly" hidden>
@@ -399,18 +542,53 @@ td.num{text-align:right;}
     </div>
     <div class="note" id="wkNote"></div>
     <div class="kpis" id="wkKpis"></div>
-    <div class="upper-split">
-      <div class="upper-left donut-row">
-        <div class="card"><h3>现有产能负荷率 <span class="hint" id="wkLoadHint"></span></h3><div class="donut-wrap"><div id="wkDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo"></div></div></div>
-        <div class="card"><h3>本周计划负荷率 <span class="hint" id="wkSimHint"></span></h3><div class="donut-wrap"><div id="wkDonut2" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo2"></div></div></div>
+    <!-- 顶部：双 donut -->
+    <div class="donut-row" style="margin-bottom:18px;">
+      <div class="card"><h3>现有产能负荷率 <span class="hint" id="wkLoadHint"></span></h3><div class="donut-wrap"><div id="wkDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo"></div></div></div>
+      <div class="card"><h3>本周计划负荷率 <span class="hint" id="wkSimHint"></span></h3><div class="donut-wrap"><div id="wkDonut2" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo2"></div></div></div>
+    </div>
+    <!-- 供应商负荷对比 + 周计划明细 并列双栏 -->
+    <div style="display:flex;gap:18px;align-items:start;">
+      <div class="card" style="flex:1;min-width:0;">
+        <h3>供应商负荷对比 <span class="hint">按月份拆分在途与周计划</span></h3>
+        <div class="tbl-scroll" style="max-height:560px;"><table id="wkTbl"><thead><tr><th>供应商</th><th>月份</th><th class="num">在途数量</th><th class="num">周计划数量</th><th class="num">现有负荷率</th><th class="num">本周计划负荷率</th><th class="num">剩余产能</th><th>周产能占用明细</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
       </div>
-      <div class="upper-right">
-        <div class="card card-full"><h3>供应商负荷对比 <span class="hint">按月份拆分在途与周计划</span></h3><div class="tbl-scroll" style="max-height:560px;"><table id="wkTbl"><thead><tr><th>供应商</th><th>月份</th><th class="num">在途数量</th><th class="num">周计划数量</th><th class="num">现有负荷率</th><th class="num">本周计划负荷率</th><th class="num">剩余产能</th><th>周产能占用明细</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card" style="flex:1;min-width:0;">
+        <h3>周计划明细 <span class="hint">SPU 列显示数量，点击查看详情</span></h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+          <span style="font-size:14px;color:var(--muted)">待交货日期</span>
+          <input type="date" id="wkDFrom" class="btn btn-sm" style="padding:4px 8px;">
+          <span style="font-size:14px;color:var(--muted)">~</span>
+          <input type="date" id="wkDTo" class="btn btn-sm" style="padding:4px 8px;">
+          <button class="btn btn-sm" id="wkDApply" type="button">筛选</button>
+          <button class="btn btn-sm" id="wkDClear" type="button">清除</button>
+        </div>
+        <div class="tbl-scroll" style="max-height:420px;"><table id="wkDetailTbl"><thead><tr><th>供应商</th><th>SPU</th><th class="num">订单数</th><th>物料名称</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
       </div>
     </div>
     <div class="card card-full" style="margin-top:16px;">
-      <h3>周计划明细 <span class="hint">点击 SPU 查看 SKU 子数据</span></h3>
-      <div class="tbl-scroll" style="max-height:420px;"><table id="wkDetailTbl"><thead><tr><th>待交货日期</th><th>供应商</th><th>SPU</th><th>物料名称</th><th class="num">数量</th></tr></thead><tbody></tbody></table></div>
+      <h3>🧮 预估产能计算 <span class="hint">预估产能 × 日期范围(精确到日) → 在途+周计划预估货期</span></h3>
+      <div id="capCalc" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;">
+          <label style="font-size:14px;color:var(--muted);font-weight:600;">供应商</label>
+          <select id="calcSup" class="btn" style="padding:6px 10px;width:100%;"></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:110px;">
+          <label style="font-size:14px;color:var(--muted);font-weight:600;">月有效产能</label>
+          <input type="number" id="calcCap" class="btn" style="padding:6px 10px;width:100%;min-width:110px;" placeholder="留空=系统值">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;">
+          <label style="font-size:14px;color:var(--muted);font-weight:600;">起始日期</label>
+          <input type="date" id="calcDateFrom" class="btn" style="padding:6px 10px;width:100%;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;">
+          <label style="font-size:14px;color:var(--muted);font-weight:600;">截止日期</label>
+          <input type="date" id="calcDateTo" class="btn" style="padding:6px 10px;width:100%;">
+        </div>
+        <button class="btn" id="calcRun" type="button" style="padding:7px 18px;background:var(--primary);color:#fff;border-color:var(--primary);">计算</button>
+        <button class="btn btn-sm" id="calcReset" type="button">重置</button>
+      </div>
+      <div id="calcResult" style="font-size:14px;line-height:1.8;"></div>
     </div>
   </section>
 
@@ -425,11 +603,9 @@ td.num{text-align:right;}
     </div>
     <div class="note" id="svNote"></div>
     <div class="kpis" id="svKpis"></div>
-    <div class="upper-split">
-      <div style="display:flex;gap:16px;flex-wrap:wrap;width:100%;">
-        <div class="card"><h3>现有产能负荷率 <span class="hint" id="svLoadHint"></span></h3><div class="donut-wrap"><div id="svDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="svDonutInfo"></div></div></div>
-        <div class="card"><h3>本周计划负荷率 <span class="hint" id="svSimHint"></span></h3><div class="donut-wrap"><div id="svDonut2" style="flex:0 0 150px;"></div><div class="donut-info" id="svDonutInfo2"></div></div></div>
-      </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:stretch;">
+      <div class="card" style="flex:1 1 240px;"><h3>现有产能负荷率 <span class="hint" id="svLoadHint"></span></h3><div class="donut-wrap"><div id="svDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="svDonutInfo"></div></div></div>
+      <div class="card" style="flex:2 1 320px;min-width:300px;"><h3>每周在途数据 <span class="hint">按 ISO 自然周分行</span></h3><div class="tbl-scroll" style="max-height:260px;"><table id="svWeekTbl"><thead><tr><th>周</th><th class="num">在途数量</th><th class="num">已收数量</th><th class="num">周产能</th><th class="num">已占用</th><th class="num">剩余产能</th><th class="num">SPU详情</th></tr></thead><tbody></tbody></table></div></div>
     </div>
     <div class="card card-full" style="margin-top:16px;">
       <h3>各供应商明细 <span class="hint">支持列筛选</span> <button id="svClearFilters" class="btn-sm" type="button">清空筛选</button> <span id="svFilterSummary" class="hint"></span></h3>
@@ -445,14 +621,17 @@ td.num{text-align:right;}
         <span style="font-size:13px;color:var(--muted)">月份</span><select id="monMon" class="btn" style="padding:6px 10px;"></select>
       </div>
     </div>
-    <div class="col-body" style="padding-top:4px;">
-      <section class="tcard" id="monCompareCard">
-        <h3>各供应商月度对比 <span class="hint" id="monCompareHint"></span></h3>
-        <div class="mini-wrap" id="monCompareTable"></div>
+    <div class="col-body" style="padding-top:4px;display:flex;flex-direction:row;gap:16px;align-items:flex-start;">
+      <!-- 左栏：各供应商月度对比（含产能） -->
+      <section class="tcard" id="monCompareCard" style="flex:0 0 48%;min-width:0;">
+        <h3>各供应商月度对比（含产能） <span class="hint" id="monCompareHint"></span></h3>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;"><input id="monSupFilter" type="text" placeholder="搜索供应商..." style="flex:1;min-width:0;padding:5px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;outline:none;background:var(--panel);"><button id="monSupFilterClear" style="padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;cursor:pointer;">清除</button></div>
+        <div class="tbl-scroll" style="max-height:calc(100vh - 220px);"><table id="monCompareTable" class="mini"><thead><tr><th>供应商</th><th class="num">SPU数</th><th class="num">计划</th><th class="num">已收</th><th class="num">剩余</th><th class="num">已占用</th><th class="num">剩余产能</th><th class="num">周在途</th></tr></thead><tbody></tbody></table></div>
       </section>
-      <section class="tcard" id="monCapCard" style="margin-top:16px;">
-        <h3>供应商产能负荷对比 <span class="hint">剩余产能 = 有效产能 - 已占用负荷</span></h3>
-        <div class="tbl-scroll" style="max-height:520px;"><table id="monCapTbl"><thead><tr><th>供应商</th><th class="num">工厂总产能</th><th class="num">有效产能</th><th class="num">已占用</th><th class="num">剩余产能</th><th class="num">负荷率</th><th>周产能明细</th></tr></thead><tbody></tbody></table></div>
+      <!-- 右栏：月度订单总数据排序列表 -->
+      <section class="tcard" id="monRankCard" style="flex:1;min-width:0;">
+        <h3>月度订单总数据 <span class="hint" id="monRankHint"></span></h3>
+        <div class="tbl-scroll" style="max-height:calc(100vh - 220px);"><table id="monRankTable" class="mini"><thead><tr><th>排名</th><th>供应商</th><th class="num">在途(剩余)</th><th class="num">计划总量</th><th class="num">SPU数</th></tr></thead><tbody></tbody></table></div>
       </section>
     </div>
   </section>
@@ -470,7 +649,7 @@ td.num{text-align:right;}
       <div style="text-align:center;padding:60px 20px;color:var(--muted);">
         <p style="font-size:48px;margin:0 0 16px;">✨</p>
         <p style="font-size:16px;font-weight:500;margin:0 0 8px;">新品排期测算</p>
-        <p style="font-size:13px;line-height:1.7;max-width:480px;margin:0 auto;">
+        <p style="font-size:14px;line-height:1.7;max-width:480px;margin:0 auto;">
           导入新品数量表格后，系统将自动测算每个新品下单会占据供应商多少产能。<br>
           支持按供应商、SPU、周计划维度分析产能占用情况。<br><br>
           请点击右上角「导入新品数据」开始。
@@ -491,10 +670,11 @@ td.num{text-align:right;}
     <div class="note" id="lnNote"></div>
     <div class="tm-tag-bar"><span style="font-size:13px;color:var(--muted)">产线标签：</span><div id="lnTagPills"></div></div>
     <div class="tm-split">
-      <div class="card" id="lnProgressCard"><h3 id="lnProgressTitle">标签进度</h3><div id="lnProgressBody"></div></div>
-      <div class="card"><h3>各产线收料与负荷表 <span class="hint">点击行下钻明细</span></h3><div class="tbl-scroll" style="max-height:520px;"><table id="lnTbl"><thead><tr><th>产线标签</th><th class="num">SPU总数</th><th>详情</th><th class="num">采购订单数量</th><th class="num">已收</th><th class="num">剩余</th><th class="num">计划</th><th>进度</th><th class="num">供应商数</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card" id="lnProgressCard" style="flex:1;min-width:0;"><h3 id="lnProgressTitle">标签进度</h3><div id="lnProgressBody"></div></div>
+      <div class="card" style="flex:1;min-width:0;max-height:calc(100vh - 220px);"><h3>各产线收料与负荷表 <span class="hint">点击行下钻明细</span></h3><div class="tbl-scroll" style="max-height:calc(100vh - 280px);"><table id="lnTbl"><thead><tr><th>产线标签</th><th class="num">SPU总数</th><th>详情</th><th class="num">采购订单数量</th><th class="num">已收</th><th class="num">剩余</th><th class="num">计划</th><th>进度</th><th class="num">供应商数</th></tr></thead><tbody></tbody></table></div></div>
     </div>
-    <div class="card card-full" style="margin-top:16px;"><h3>各产线收料与负荷 <span class="hint">点击柱下钻明细</span></h3><div class="chart-wrap" id="lnChart"></div><div class="legend"><span><i class="swatch" style="background:var(--green)"></i>已收</span><span><i class="swatch" style="background:var(--amber)"></i>剩余</span><span><i class="swatch" style="background:var(--plan)"></i>计划</span></div></div>
+    <div class="card card-full" style="margin-top:16px;"><h3>各产线收料与负荷 <span class="hint">点击柱下钻明细</span></h3><div class="chart-wrap" id="lnChart" style="max-height:260px;"></div><div class="legend"><span><i class="swatch" style="background:var(--green)"></i>已收</span><span><i class="swatch" style="background:var(--amber)"></i>剩余</span><span><i class="swatch" style="background:var(--plan)"></i>计划</span></div></div>
+    <div class="card card-full" style="margin-top:16px;" id="lnCatCard"><h3>产类数据 <span class="hint">按产线标签归并：布类高速线 / 合成革高速线 / 拉杆箱组装线 / 其它产线</span></h3><div id="lnCatData"></div></div>
   </section>
 
   <!-- 时效分析 -->
@@ -509,10 +689,54 @@ td.num{text-align:right;}
     <div class="note" id="tmNote"></div>
     <div class="tm-tag-bar"><span style="font-size:13px;color:var(--muted)">时效标签：</span><div id="tmTagPills"></div></div>
     <div class="tm-split">
-      <div class="card" id="tmProgressCard"><h3 id="tmProgressTitle">标签进度</h3><div id="tmProgressBody"></div></div>
-      <div class="card"><h3>各时效标签收料表 <span class="hint">点击行下钻明细</span></h3><div class="tbl-scroll" style="max-height:520px;"><table id="tmTbl"><thead><tr><th>时效标签</th><th class="num">SPU总数</th><th>详情</th><th class="num">采购订单数量</th><th class="num">已收</th><th class="num">剩余</th><th class="num">计划</th><th>进度</th><th class="num">供应商数</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card" id="tmProgressCard" style="flex:1;min-width:0;"><h3 id="tmProgressTitle">标签进度</h3><div id="tmProgressBody"></div></div>
+      <div class="card" style="flex:1;min-width:0;max-height:calc(100vh - 220px);"><h3>各时效标签收料表 <span class="hint">点击行下钻明细</span></h3><div class="tbl-scroll" style="max-height:calc(100vh - 280px);"><table id="tmTbl"><thead><tr><th>时效标签</th><th class="num">SPU总数</th><th>详情</th><th class="num">采购订单数量</th><th class="num">已收</th><th class="num">剩余</th><th class="num">计划</th><th>进度</th><th class="num">供应商数</th></tr></thead><tbody></tbody></table></div></div>
     </div>
-    <div class="card card-full" style="margin-top:16px;"><h3>各时效标签收料 <span class="hint">点击柱下钻明细</span></h3><div class="chart-wrap" id="tmChart"></div><div class="legend"><span><i class="swatch" style="background:var(--green)"></i>已收</span><span><i class="swatch" style="background:var(--amber)"></i>剩余</span><span><i class="swatch" style="background:var(--plan)"></i>计划</span></div></div>
+    <div class="card card-full" style="margin-top:16px;"><h3>各时效标签收料 <span class="hint">点击柱下钻明细</span></h3><div class="chart-wrap" id="tmChart" style="max-height:260px;"></div><div class="legend"><span><i class="swatch" style="background:var(--green)"></i>已收</span><span><i class="swatch" style="background:var(--amber)"></i>剩余</span><span><i class="swatch" style="background:var(--plan)"></i>计划</span></div></div>
+    <div class="card card-full" style="margin-top:16px;" id="tmCatCard"><h3>时效分类数据 <span class="hint">按时效标签归并：爆款新品 / 新品 / 首次返单 / 自备货 / 新变体 / 其它</span></h3><div id="tmCatData"></div></div>
+  </section>
+
+  <section class="main" id="pageTool" hidden>
+    <div class="topbar">
+      <div class="crumb">工具 · 预估产能计算</div>
+    </div>
+    <div class="note">选择供应商与精确日期范围（起始/截止日期，精确到日），自动计算该范围内在途数据与周计划预估货期订单的剩余产能，并列出 SPU / 订单单据编号 / 数量明细。</div>
+    <div class="card card-full">
+      <h3>🧮 预估产能计算 <span class="hint">预估产能 × 日期范围 → 在途+周计划预估</span></h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;"><label style="font-size:14px;color:var(--muted);font-weight:600;">供应商</label><select id="toolSup" class="btn" style="padding:6px 10px;width:100%;"></select></div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;"><label style="font-size:14px;color:var(--muted);font-weight:600;">月有效产能</label><input type="number" id="toolCap" class="btn" style="padding:6px 10px;width:100%;min-width:120px;" placeholder="留空=系统值"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;"><label style="font-size:14px;color:var(--muted);font-weight:600;">起始日期</label><input type="date" id="toolDateFrom" class="btn" style="padding:6px 10px;width:100%;"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:150px;"><label style="font-size:14px;color:var(--muted);font-weight:600;">截止日期</label><input type="date" id="toolDateTo" class="btn" style="padding:6px 10px;width:100%;"></div>
+        <button class="btn" id="toolRun" type="button" style="padding:7px 18px;background:var(--primary);color:#fff;border-color:var(--primary);">计算</button>
+        <button class="btn btn-sm" id="toolReset" type="button">重置</button>
+      </div>
+      <!-- What-if 模拟：假设性周计划新增量 -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px;background:var(--bg2);border-radius:10px;border:1px dashed var(--line);">
+        <div style="font-size:14px;font-weight:700;color:var(--ink);letter-spacing:.04em;text-transform:uppercase;width:100%;margin-bottom:4px;">📊 WHAT-IF 模拟</div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:160px;"><label style="font-size:14px;color:var(--muted);">假设周计划新增数量</label><input type="number" id="toolSimQty" class="btn" style="padding:6px 10px;width:100%;" placeholder="0 = 不模拟" value="0" min="0"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;"><label style="font-size:14px;color:var(--muted);">模拟目标月份</label><select id="toolSimMon" class="btn" style="padding:6px 10px;width:100%;"><option value="">全部月份</option></select></div>
+        <button class="btn btn-sm" id="toolSimRun" type="button" style="background:var(--violet);color:#fff;border-color:var(--violet);">运行模拟</button>
+        <span style="font-size:14px;color:var(--muted);max-width:280px;line-height:1.5;">输入假设的新增周计划数量，叠加到现有在途数据上，查看对产能负荷的影响（不修改原始数据）</span>
+      </div>
+      <div id="toolResult" style="font-size:14px;line-height:1.8;"></div>
+    </div>
+  </section>
+
+  <section class="main" id="pageSpu" hidden>
+    <div class="topbar">
+      <div class="crumb">工具 · SPU 查询</div>
+    </div>
+    <div class="note">输入 SPU（物料编码前 4 位）查询关联的供应商、订单数量、货期与在途数据。</div>
+    <div class="card card-full">
+      <h3>🔍 SPU 查询 <span class="hint">输入 SPU 查关联信息</span></h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:170px;"><label style="font-size:14px;color:var(--muted);font-weight:600;">SPU（前4位）</label><input id="spuQ" class="btn" style="padding:6px 10px;width:100%;" placeholder="如 6201"></div>
+        <button class="btn" id="spuQRun" type="button" style="padding:7px 18px;background:var(--primary);color:#fff;border-color:var(--primary);">查询</button>
+        <button class="btn btn-sm" id="spuQReset" type="button">重置</button>
+      </div>
+      <div id="spuResult" style="font-size:14px;line-height:1.8;"></div>
+    </div>
   </section>
 
 </div>
@@ -523,16 +747,16 @@ td.num{text-align:right;}
 <div class="filter-panel" id="svFilterPanel" style="display:none"></div>
 <div class="spu-modal" id="spuModal">
   <div class="spu-modal-card">
-    <div class="spu-modal-head"><div><div class="spu-modal-title"></div><div class="spu-modal-sub" style="font-size:12px;color:var(--muted);margin-top:4px;"></div></div><button class="fp-x" id="spuModalClose" type="button">×</button></div>
+    <div class="spu-modal-head"><div><div class="spu-modal-title"></div><div class="spu-modal-sub" style="font-size:14px;color:var(--muted);margin-top:4px;"></div></div><button class="fp-x" id="spuModalClose" type="button">×</button></div>
     <div class="spu-modal-body"></div>
-    <div class="spu-modal-foot" style="font-size:12px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line);margin-top:12px;">点击 SKU 行可定位到明细表中对应的供应商 / SPU</div>
+    <div class="spu-modal-foot" style="font-size:14px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line);margin-top:12px;">点击 SKU 行可定位到明细表中对应的供应商 / SPU</div>
   </div>
 </div>
 <div class="spu-modal" id="tagModal">
-  <div class="spu-modal-card" style="max-width:760px;">
-    <div class="spu-modal-head"><div><div class="spu-modal-title"></div><div class="spu-modal-sub" style="font-size:12px;color:var(--muted);margin-top:4px;"></div></div><button class="fp-x" id="tagModalClose" type="button">×</button></div>
+  <div class="spu-modal-card" style="max-width:1140px;">
+    <div class="spu-modal-head"><div><div class="spu-modal-title"></div><div class="spu-modal-sub" style="font-size:14px;color:var(--muted);margin-top:4px;"></div></div><button class="fp-x" id="tagModalClose" type="button">×</button></div>
     <div class="spu-modal-body" id="tagModalBody"></div>
-    <div class="spu-modal-foot" style="font-size:12px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line);margin-top:12px;">点击 SPU 行可定位到明细表中对应的标签 / SPU</div>
+    <div class="spu-modal-foot" style="font-size:14px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line);margin-top:12px;">点击 SPU 行可定位到明细表中对应的标签 / SPU</div>
   </div>
 </div>
 
@@ -556,7 +780,7 @@ let state = { supplier:null, month:null, timeTag:null, lineTag:null };
 /* ---------- 预计算索引 ---------- */
 let capMap = new Map();
 let suppliers = [], months = [];
-let poBySup = new Map(), poByMon = new Map(), poBySupMon = new Map();
+let poBySup = new Map(), poByMon = new Map(), poBySupMon = new Map(), weeklyBySup = new Map(), weeklyByMon = new Map(), weeklyBySupMon = new Map();
 let allMonthsAgg = [], supplierAgg = new Map();
 
 /* 产能双维度：effCap=有效产能(实际给到本公司)，factoryCap=工厂总产能。
@@ -566,7 +790,7 @@ function capFactoryRaw(name){ const c = capMap.get(name); return (c && +c.factor
 function capOf(name){ const v = capEffRaw(name); return v > 0 ? v : DEFCAP; }
 function capFactoryOf(name){ const v = capFactoryRaw(name); return v > 0 ? v : capOf(name); }
 function isWeekly(r){ return !!(r && r.kind==='weekly'); }
-function supplierHasData(name){ const a=supplierAgg.get(name); if(a&&a.purchase>0) return true; return DATA.po.some(r=>isWeekly(r)&&r.supplier===name); }
+function supplierHasData(name){ const a=supplierAgg.get(name); if(a&&a.purchase>0) return true; return (DATA.weekly||[]).some(r=>r.supplier===name); }
 function agg(list){
   let received=0, remaining=0, purchase=0;
   for (const r of list){ received+=r.received||0; remaining+=r.remaining||0; purchase+=r.purchase||0; }
@@ -600,6 +824,7 @@ function supShort(name){ const s=suppliers.find(x=>x.name===name); return (s&&s.
 
 function recompute(){
   capMap = new Map();
+  if(!DATA.weekly) DATA.weekly = [];
   /* 归一化：旧版数据只有 cap 字段，向后兼容映射到 effCap；factoryCap 缺失记 0（表格显示"待填"） */
   for (const c of DATA.capacity){
     if (capMap.has(c.supplier)) continue;
@@ -608,7 +833,7 @@ function recompute(){
     capMap.set(c.supplier, c);
   }
   const supSet = new Set();
-  DATA.po.forEach(p => supSet.add(p.supplier));
+  DATA.po.forEach(p => supSet.add(p.supplier)); (DATA.weekly||[]).forEach(p=>supSet.add(p.supplier));
   DATA.capacity.forEach(c => supSet.add(c.supplier));
   const shortSet = new Set();
   suppliers = [...supSet].map(name => {
@@ -619,18 +844,21 @@ function recompute(){
     shortSet.add(short);
     return { name, short, owner:(c&&c.owner)||'', cap:capOf(name), hasPO:false };
   });
-  poBySup = new Map(); poByMon = new Map(); poBySupMon = new Map(); supplierAgg = new Map();
-  for (const r of DATA.po){
+  poBySup = new Map(); poByMon = new Map(); poBySupMon = new Map(); supplierAgg = new Map(); weeklyBySup = new Map(); weeklyByMon = new Map(); weeklyBySupMon = new Map();
+  for (const r of DATA.po){ if(isWeekly(r)) continue;
     const s = r.supplier;
     if (!poBySup.has(s)) poBySup.set(s, []); poBySup.get(s).push(r);
     const m = r.month || '—';
     if (!poByMon.has(m)) poByMon.set(m, []); poByMon.get(m).push(r);
     const k = key(s,m); if (!poBySupMon.has(k)) poBySupMon.set(k, []); poBySupMon.get(k).push(r);
   }
-  months = [...poByMon.keys()].sort((a,b)=> parseInt((a+'').replace(/\D/g,'')||'0') - parseInt((b+'').replace(/\D/g,'')||'0'));
+  for (const r of (DATA.weekly||[])){ const s=r.supplier; if(!weeklyBySup.has(s)) weeklyBySup.set(s,[]); weeklyBySup.get(s).push(r); const m=r.month||'—'; if(!weeklyByMon.has(m)) weeklyByMon.set(m,[]); weeklyByMon.get(m).push(r); const k=key(s,m); if(!weeklyBySupMon.has(k)) weeklyBySupMon.set(k,[]); weeklyBySupMon.get(k).push(r); }
+  months = [...poByMon.keys()];
+  (DATA.weekly||[]).forEach(r=>{ if(r.month) months.push(r.month); });
+  months = [...new Set(months)].sort((a,b)=> parseInt((a+'').replace(/\D/g,'')||'0') - parseInt((b+'').replace(/\D/g,'')||'0'));
   for (const s of suppliers){
     const list = poBySup.get(s.name) || [];
-    s.hasPO = list.length > 0;
+    s.hasPO = list.length > 0 || ((weeklyBySup.get(s.name)||[]).length>0);
     supplierAgg.set(s.name, agg(list));
   }
   suppliers.sort((a,b)=> (b.hasPO?1:0)-(a.hasPO?1:0) || b.cap-a.cap);
@@ -665,12 +893,20 @@ function fillMonSel(sel, selected){
 }
 function fillWeeklyMonSel(sel, selected){
   if(!sel) return;
-  const wm = weeklyMonths();
+  /* 周计划模拟页面同时展示在途+周计划数据，故月份选项取全局 months（含在途月份），而非仅 weeklyMonths() */
   const cur = selected || sel.value || '全部月份';
   sel.innerHTML = '';
   const o0 = document.createElement('option'); o0.value = '全部月份'; o0.textContent = '全部月份'; sel.appendChild(o0);
-  wm.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
-  sel.value = (cur && cur !== '全部月份' && wm.includes(cur)) ? cur : '全部月份';
+  months.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+  sel.value = (cur && cur !== '全部月份' && months.includes(cur)) ? cur : '全部月份';
+}
+function fillOpt(sel, vals, cur){
+  if(!sel) return;
+  const c = cur || sel.value || '全部';
+  sel.innerHTML='';
+  const o0=document.createElement('option'); o0.value='全部'; o0.textContent='全部'; sel.appendChild(o0);
+  vals.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  sel.value = (c && c!=='全部' && vals.includes(c)) ? c : '全部';
 }
 
 /* ---------- 导入文件展示 ---------- */
@@ -805,27 +1041,74 @@ function renderTop(){
 
 function renderChart(){
   const sup=state.supplier, mon=state.month;
+  const gran=$('#chartGran')?$('#chartGran').value:'week';
+  const cmSel=$('#chartMonSel')?$('#chartMonSel').value:'';
+  /* 填充月份下拉（仅首次） */
+  const mSelEl=$('#chartMonSel');
+  if(mSelEl && !mSelEl._populated){
+    mSelEl._populated=1;
+    months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mSelEl.appendChild(o); });
+    if(months.length) { const cur=(TODAY.getMonth()+1)+'月'; if(months.includes(cur)) mSelEl.value=cur; else mSelEl.value=months[months.length-1]; }
+    mSelEl.addEventListener('change', render);
+  }
+  const granEl=$('#chartGran');
+  if(granEl && !granEl._populated){
+    granEl._populated=1;
+    granEl.addEventListener('change', render);
+  }
+
   let cats=[], series=[], title='', hint='';
-  if(sup && !mon){
-    const pairs = months.map(m=>[m, supMonthAgg(sup,m)]).filter(([,s])=>s.purchase>0);
-    cats = pairs.map(p=>p[0]); series = pairs.map(p=>p[1]); title=`${supShort(sup)} · 各月收料`; hint='按月份';
-  }else if(!sup && mon){
-    const map=poByMon.get(mon) || [];
-    const bySup = new Map();
-    for (const r of map){ if(!bySup.has(r.supplier)) bySup.set(r.supplier, []); bySup.get(r.supplier).push(r); }
-    const arr=[...bySup.entries()].map(([k,v])=>[k,agg(v)]).sort((a,b)=>b[1].remaining-a[1].remaining).slice(0,12);
-    cats=arr.map(x=>supShort(x[0])); series=arr.map(x=>x[1]); title=`${mon} · Top 供应商`; hint='按供应商';
-  }else if(sup && mon){
-    cats=[mon]; series=[supMonthAgg(sup,mon)]; title=`${supShort(sup)} · ${mon}`; hint='单月';
-  }else{
-    cats=months; series=allMonthsAgg; title='全部 · 各月收料总览'; hint='按月份';
+
+  if(gran === 'week'){
+    /* 周粒度：按 ISO 自然周聚合 */
+    const targetMon = cmSel || mon || '';
+    const weekMap = new Map();
+    DATA.po.forEach(r=>{
+      if(sup && r.supplier!==sup) return;
+      if(targetMon && r.month!==targetMon) return;
+      if(isWeekly(r)) return;
+      const d=parseDeliverDate(r.deliveryDate); if(!d) return;
+      const iso=isoWeekOfYear(d), yr=d.getFullYear();
+      const wKey=yr+'-W'+String(iso).padStart(2,'0');
+      const rangeObj=isoWeekRange(yr, iso);
+      const range=(typeof rangeObj==='string'?rangeObj:(rangeObj&&rangeObj.label?rangeObj.label:'W'+iso));
+      if(!weekMap.has(wKey)) weekMap.set(wKey,{label:range, received:0, remaining:0, purchase:0});
+      const e=weekMap.get(wKey); e.received+=(r.received||0); e.remaining+=(r.remaining||0); e.purchase+=(r.purchase||0);
+    });
+    const wArr=[...weekMap.entries()].sort((a,b)=>a[0].localeCompare(b[0],'en',{numeric:true})).map(([,v])=>v);
+    cats=wArr.map(w=>w.label); series=wArr;
+    title = targetMon ? (sup?`${supShort(sup)} · ${targetMon}`:`${targetMon} · 各供应商`) : (sup?`${supShort(sup)} · 周收料`:'全部 · 周收料总览');
+    hint = '按ISO自然周（周一始）';
+  } else {
+    /* 月粒度：原有逻辑 */
+    if(sup && !mon){
+      const pairs = months.map(m=>[m, supMonthAgg(sup,m)]).filter(([,s])=>s.purchase>0);
+      cats = pairs.map(p=>p[0]); series = pairs.map(p=>p[1]); title=`${supShort(sup)} · 各月收料`; hint='按月份';
+    }else if(!sup && mon){
+      const map=poByMon.get(mon) || [];
+      const bySup = new Map();
+      for (const r of map){ if(!bySup.has(r.supplier)) bySup.set(r.supplier, []); bySup.get(r.supplier).push(r); }
+      const arr=[...bySup.entries()].map(([k,v])=>[k,agg(v)]).sort((a,b)=>b[1].remaining-a[1].remaining).slice(0,12);
+      cats=arr.map(x=>supShort(x[0])); series=arr.map(x=>x[1]); title=`${mon} · Top 供应商`; hint='按供应商';
+    }else if(sup && mon){
+      cats=[mon]; series=[supMonthAgg(sup,mon)]; title=`${supShort(sup)} · ${mon}`; hint='单月';
+    }else{
+      cats=months; series=allMonthsAgg; title='全部 · 各月收料总览'; hint='按月份';
+    }
   }
   $('#chartTitle').innerHTML = title+` <span class="hint">${hint}</span>`;
   barChart($('#chart'), cats, series, {});
+  /* 填充图表汇总表 */
+  const sumTbl=$('#chartSummaryTbl');
+  if(sumTbl && series.length){
+    const totR=series.reduce((s,r)=>s+(r.received||0),0), totM=series.reduce((s,r)=>s+(r.remaining||0),0), totP=series.reduce((s,r)=>s+(r.purchase||0),0);
+    sumTbl.querySelector('tbody').innerHTML = series.map((r,i) => '<tr'+(i===series.length-1?' style="border-bottom:2px solid var(--line);"':'')+'><td style="white-space:nowrap;font-size:14px;">'+(r.label||cats[i]||'')+'</td><td class="r" style="font-size:14px;color:var(--green);">'+fmt(r.received||0)+'</td><td class="r" style="font-size:14px;color:var(--amber);">'+fmt(r.remaining||0)+'</td><td class="r" style="font-size:14px;color:var(--plan);">'+fmt(r.purchase||0)+'</td></tr>').join('')
+      + '<tr style="background:var(--bg2);font-weight:600;"><td>合计</td><td class="r" style="color:var(--green);">'+fmt(totR)+'</td><td class="r" style="color:var(--amber);">'+fmt(totM)+'</td><td class="r" style="color:var(--plan);">'+fmt(totP)+'</td></tr>';
+  }
 }
 
 /* ---------- 产能负荷率环形图 ---------- */
-function renderDonut(load){
+function renderDonut(load, capTotal){
   const over = load > 1;
   const col = loadColor(load);
   const R=70, C=2*Math.PI*R, off = C*(1-Math.min(1,load));
@@ -837,11 +1120,12 @@ function renderDonut(load){
     <text x="90" y="106" text-anchor="middle" font-size="11" fill="#8a93a2">产能负荷率</text>
   </svg>`;
   $('#donut').innerHTML = svg;
+  const idleVal = capTotal>0 ? Math.round(capTotal*(1-Math.min(1,load))) : 0;
   $('#donutInfo').innerHTML = over
     ? `<b style="color:#e03131">超载 ${((load-1)*100).toFixed(0)}%</b><br>下单量已超过月产能，需扩产或外协。`
-    : `<b style="color:${col}">${(load*100).toFixed(1)}%</b> 已占用<br>空闲产能 ${((1-load)*100).toFixed(1)}%`;
+    : `<b style="color:${col}">${(load*100).toFixed(1)}%</b> 已占用<br>空闲产能 ${((1-load)*100).toFixed(1)}%（<b>${fmt(idleVal)}</b>）`;
 }
-function renderSatDonut(sat){
+function renderSatDonut(sat, capTotal){
   const over = sat > 1;
   const col = loadColor(sat);
   const R=70, C=2*Math.PI*R, off = C*(1-Math.min(1,sat));
@@ -853,9 +1137,10 @@ function renderSatDonut(sat){
     <text x="90" y="106" text-anchor="middle" font-size="11" fill="#8a93a2">月产能饱和度</text>
   </svg>`;
   $('#donut2').innerHTML = svg;
+  const idleVal = capTotal>0 ? Math.round(capTotal*(1-Math.min(1,sat))) : 0;
   $('#donutInfo2').innerHTML = over
     ? `<b style="color:#e03131">超载 ${((sat-1)*100).toFixed(0)}%</b><br>剩余量已超过月产能，需扩产或外协。`
-    : `<b style="color:${col}">${(sat*100).toFixed(1)}%</b> 已占用<br>空闲产能 ${((1-sat)*100).toFixed(1)}%`;
+    : `<b style="color:${col}">${(sat*100).toFixed(1)}%</b> 已占用<br>空闲产能 ${((1-sat)*100).toFixed(1)}%（<b>${fmt(idleVal)}</b>）`;
 }
 
 /* ---------- 明细表 ---------- */
@@ -1172,12 +1457,16 @@ function loadSoft(load){ return load<0.5 ? 'var(--green-soft)' : (load<=0.8 ? 'v
 /* 明细完成率配色（与明细表一致）：≥100% 绿 / ≥60% 蓝 / ≥30% 橙 / <30% 红 */
 function cmpColor(p){ return p>=100?'#2f9e44':p>=60?'#2563eb':p>=30?'#e8920c':'#e03131'; }
 function pgCell(p){ const c=cmpColor(p); const w=Math.max(0,Math.min(100,p)); return '<div class="pgrow"><span class="pct" style="color:'+c+'">'+p.toFixed(0)+'%</span><span class="pg"><i style="width:'+w+'%;background:'+c+'"></i></span></div>'; }
+/* 弹窗内紧凑进度条（颜色与 pgCell 一致，但布局更克制） */
+function pgMini(p){ const c=cmpColor(p); const w=Math.max(0,Math.min(100,p)); return '<span class="pgmini"><span class="pgmini-pct" style="color:'+c+'">'+p.toFixed(0)+'%</span><span class="pgmini-bar"><i style="width:'+w+'%;background:'+c+'"></i></span></span>'; }
+/* 阈值颜色纯文字百分比（无进度条，用于紧凑表格）：<50%红 / 50-80%橙 />80%绿 */
+function pctText(p){ const v=Math.max(0,Math.min(100,p)); const c=v<50?'var(--red)':v<80?'var(--amber)':'var(--green)'; return '<span style="color:'+c+';font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;">'+v.toFixed(0)+'%</span>'; }
 
 
 $('#tbl').addEventListener('click', e=>{
   const td = e.target.closest('td.clickable'); if(!td) return;
   const f = td.dataset.f;
-  if(f==='SPU'){ const tr=td.closest('tr'); const ri=+tr.dataset.ri; const row=window._detailRows && window._detailRows[ri]; if(row) openSpuModal(row.supplier, buildSpuRow(row.supplier, row.poNo, row.spu)); return; }
+  if(f==='SPU'){ const tr=td.closest('tr'); const ri=+tr.dataset.ri; const row=window._detailRows && window._detailRows[ri]; if(row) openSkuModal(row.supplier, row.spu, state.month); return; }
   let v = td.dataset.v; if(v===undefined) v = td.textContent.trim();
   copyText(v); toast('已复制 '+f+'：'+v);
 });
@@ -1265,6 +1554,131 @@ function renderInTransitNext(){
     + `</tbody></table><div class="mini-foot">在途合计 <b>${fmt(totRem)}</b> · 采购订单数量合计 <b>${fmt(totPur)}</b></div>`;
   box.onclick = e=>{ const a=e.target.closest('a.spu-count'); if(!a) return; const r=rows[+a.dataset.gi]; if(!r) return; openRecsModal('下月 · 交货日期 '+r.dd, r.recs, s=>buildDrill({supplier:state.supplier, spu:s.spu, month:cur})); };
 }
+
+/* 产能负荷率分布 V2（双栏：左档位条 + 右超载面板） */
+function renderCapDist(){
+  const left=$('#capDistLeft'), right=$('#capDistRight'), hint=$('#capDistHint');
+  const card=$('#capDistCard');
+
+  /* 填充月份下拉（仅首次） */
+  const mSel=$('#capDistMon');
+  if(mSel && !mSel._populated){
+    mSel._populated=1;
+    var opts='<option value="">全部月份</option>';
+    months.forEach(function(m){ opts+='<option value="'+m+'">'+m+'</option>'; });
+    mSel.innerHTML=opts;
+    if(state.month) mSel.value=state.month;
+    mSel.addEventListener('change', renderCapDist);
+  }
+  /* 同步 state.month 到筛选器 */
+  if(mSel && state.month && mSel.value!==state.month) mSel.value=state.month;
+
+  /* 读取筛选值 */
+  var fMon = mSel ? mSel.value : (state.month||'');
+  var fQ = ($('#capDistSupSearch')||{}).value || '';
+  var fFrom = ($('#capDistFrom')||{}).value || '';
+
+  hint.textContent = fMon ? ('· ' + fMon) : '· 全部月份';
+
+  /* 计算每个供应商的负荷率（支持筛选） */
+  var data = suppliers.map(function(s){
+    var a = fMon ? supMonthAgg(s.name, fMon) : (supplierAgg.get(s.name)||{received:0,remaining:0,purchase:0,completion:0});
+    var cap = capOf(s.name);
+    var used = a.purchase || 0;
+    var load = cap>0 ? used/cap : 0;
+    return {name:s.name, short:s.short, cap, used, load, remaining: cap-used};
+  }).filter(function(r){
+    if(r.used<=0) return false;
+    if(fQ && (r.short||r.name).indexOf(fQ)<0 && r.name.indexOf(fQ)<0) return false;
+    if(fFrom){
+      var ym = fFrom.split('-'); var yi=+ym[0], mi=+ym[1];
+      var a2 = supMonthAgg(r.name, mi+'月');
+      if(!a2 || !a2.purchase) return false;
+    }
+    return true;
+  });
+
+  if(!data.length){ left.innerHTML='<div class="cap-dist-empty">当前筛选下无在途订单</div>'; right.innerHTML=''; card.style.display='none'; return; }
+  card.style.display='';
+
+  /* 5 档定义 */
+  var tiers = [
+    {min:1.0001, max:Infinity, label:'>100%',   color:'#E03131'},
+    {min:0.8,   max:1.0001,  label:'80–100%', color:'#E8920C'},
+    {min:0.5,   max:0.8,     label:'50–80%',  color:'#2F9E44'},
+    {min:0.3,   max:0.5,     label:'30–50%',  color:'#185FA5'},
+    {min:0,     max:0.3,     label:'<30%',    color:'#888780'},
+  ];
+  var buckets = tiers.map(function(t){ return {...t, list: data.filter(function(r){ return r.load>=t.min && r.load<t.max; })}; });
+  var maxCount = Math.max(1, ...buckets.map(function(b){ return b.list.length; }));
+
+  /* 左栏：档位条（只显数量） */
+  left.innerHTML = buckets.map(function(b, bi){
+    var n = b.list.length;
+    var w = n>0 ? Math.max(5, Math.round(n/maxCount*100)) : 0;
+    var fill = n>0 ? '<div class="cap-dist-tier-fill" style="width:'+w+'%;background:'+b.color+'"></div>' : '';
+    return '<div class="cap-dist-tier" data-ti="'+bi+'" style="color:'+b.color+'">'
+      + '<span class="cap-dist-tier-label">'+b.label+'</span>'
+      + '<div class="cap-dist-tier-bar">'+fill+'<span class="cap-dist-tier-count">'+n+' 家</span></div>'
+      + '</div>';
+  }).join('');
+
+  /* 右栏：>=80% 超载面板 */
+  var overload = data.filter(function(r){ return r.load >= 0.8; }).sort(function(a,b){ return b.load - a.load; });
+  var oColor = function(l){ return l>1 ? '#E03161' : '#BA7517'; };
+  if(overload.length){
+    right.innerHTML = '<div class="cap-overload-title"><span class="cap-overload-dot"></span>负荷率 &ge; 80%（'+overload.length+' 家）</div>'
+      + '<table class="cap-overload-table"><thead><tr><th>供应商</th><th>产能</th><th>已占用</th><th>负荷率</th><th>超额 / 空余</th></tr></thead><tbody>'
+      + overload.slice(0, 10).map(function(r){
+        var extra = r.used > r.cap ? (r.used - r.cap) : 0;
+        var deficit = r.cap - r.used;
+          return '<tr><td title="'+r.name+'">'+(r.short||r.name)+'</td><td>'+fmt(r.cap)+'</td><td>'+fmt(r.used)+'</td>'
+          + '<td style="color:'+oColor(r.load)+';font-weight:600;">'+(r.load*100).toFixed(0)+'%</td>'
+          + '<td style="color:'+(extra? '#E03161':(deficit>0?'var(--green)':'#888'))+';font-weight:'+(extra||deficit?'500':'400')+';">'+(extra ? '<b>超额 '+fmt(extra)+'</b>' : (deficit>0 ? '空余 '+fmt(deficit) : '—'))+'</td></tr>';
+      }).join('')
+      + '</tbody></table>'
+      + (overload.length > 10 ? '<div class="cap-overload-more">... 共 '+overload.length+' 家，点击左侧档位查看完整列表</div>' : '');
+  } else {
+    right.innerHTML = '<div class="cap-dist-empty" style="padding:20px 0;text-align:center;">当前筛选下无超载供应商</div>';
+  }
+
+  /* 点击档位行 → 弹窗显示完整列表 */
+  ensureCapModal();
+  left.querySelectorAll('.cap-dist-tier').forEach(function(el){
+    el.addEventListener('click', function(){
+      var ti = +this.dataset.ti;
+      var b = buckets[ti];
+      openCapModal(b.label, b.list);
+    });
+  });
+}
+
+/* 确保弹窗 DOM 存在（只创建一次） */
+function ensureCapModal(){
+  if(document.getElementById('capModalMask')) return;
+  var mask = document.createElement('div');
+  mask.id = 'capModalMask';
+  mask.className = 'cap-modal-mask';
+  mask.innerHTML = '<div class="cap-modal"><div class="cap-modal-head"><h3 id="capModalTitle"></h3><button class="cap-modal-close" id="capModalClose">&times;</button></div>'
+    + '<div class="cap-modal-body" id="capModalBody"></div></div>';
+  document.body.appendChild(mask);
+  $('#capModalClose').addEventListener('click', function(){ $('#capModalMask').classList.remove('open'); });
+  $('#capModalMask').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+}
+
+/* 打开档位详情弹窗 */
+function openCapModal(label, list){
+  var m = $('#capModalMask');
+  $('#capModalTitle').textContent = label + ' 供应商（'+list.length+' 家）';
+  var rows = list.sort(function(a,b){ return b.load - a.load; }).map(function(r){
+    var extra = r.used > r.cap ? (r.used - r.cap) : 0;
+    return '<tr><td title="'+r.name+'">'+(r.short||r.name)+'</td><td class="r">'+fmt(r.cap)+'</td><td class="r">'+fmt(r.used)+'</td>'
+      + '<td class="r" style="color:'+(r.load>1?'#E03161':r.load>0.8?'#BA7517':'var(--ink)')+';font-weight:600;">'+(r.load*100).toFixed(0)+'%</td>'
+      + '<td class="r" style="color:'+(extra?'#E03161':'#888')+';">'+(extra ? '+'+fmt(extra) : fmt(Math.max(0,r.remaining)))+'</td></tr>';
+  }).join('');
+  $('#capModalBody').innerHTML = '<table class="cap-modal-table"><thead><tr><th>供应商</th><th class="r">有效产能</th><th class="r">已占用</th><th class="r">负荷率</th><th class="r">剩余/超额</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  m.classList.add('open');
+}
 function renderCompare(){
   const mon = state.month;
   const card=$('#compareCard'), hint=$('#compareHint'), box=$('#compareTable');
@@ -1297,10 +1711,18 @@ function render(){
   fillSupSel($('#totalSup'), state.supplier);
   fillMonSel($('#totalMon'), state.month);
 
+  /* 同步 state.month 到趋势图月份筛选（周粒度联动） */
+  const cmEl=$('#chartMonSel');
+  if(cmEl && cmEl._populated && state.month){ cmEl.value=state.month; }
+  const cgEl=$('#chartGran');
+  if(cgEl && cgEl._populated && state.month && !cgEl._autoWeeked){
+    cgEl._autoWeeked=1; cgEl.value='week';
+  }
+
   if(currentPage==='total'){
-    const {load, saturation} = renderKpis();
-    renderTop(); renderChart(); renderDonut(load); renderSatDonut(saturation); renderTable();
-    renderOverviewTable(); renderInTransit(); renderInTransitNext();
+    const {load, saturation, capTotal} = renderKpis();
+    renderTop(); renderChart(); renderDonut(load, capTotal); renderSatDonut(saturation, capTotal); renderTable();
+    renderOverviewTable(); renderInTransit(); renderInTransitNext(); renderCapDist();
     /* 明细视图也需刷新 */
     if(showDetail) renderTable();
   } else if(currentPage==='weekly') renderWeekly();
@@ -1308,6 +1730,8 @@ function render(){
   else if(currentPage==='monthly') renderMonthlyData();
   else if(currentPage==='line') renderLineView();
   else if(currentPage==='time') renderTimeView();
+  else if(currentPage==='tool') renderTool();
+  else if(currentPage==='spu') renderSpu();
 }
 
 /* ---------- 导入更新 ---------- */
@@ -1437,6 +1861,8 @@ function toggleDetailView(){
 }
 $('#navTotal').addEventListener('click',()=>goPage('total'));
 $('#toggleDetail').addEventListener('click',toggleDetailView);
+/* 刷新筛选按钮：仅重新渲染（不重置导入数据） */
+$('#btnRefresh').addEventListener('click',()=>{ render(); showToast('筛选已刷新'); });
 
 function parseDeliv(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/); return m?`${+m[1]}-${String(+m[2]).padStart(2,'0')}-${String(+m[3]).padStart(2,'0')}`:''; }
 function monthOf(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\d{1,2})/); return m?`${parseInt(m[2],10)}月`:''; }
@@ -1444,6 +1870,44 @@ function monthOf(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\d{1
 initChartTip();
 recompute();
 render();
+
+/* parseDeliverDate (needed by renderChart weekly mode; full definition in ext block) */
+function parseDeliverDate(s){
+  if(!s) return null;
+  const m1 = String(s).match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if(m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
+  const m2 = String(s).match(/(\d{1,2})月(\d{1,2})日/);
+  if(m2) return new Date(dataYear(), +m2[1]-1, +m2[2]);
+  return null;
+}
+/* ISO natural week tools (needed by renderChart weekly mode; full definitions in ext block) */
+function isoWeekOfYear(d){
+  const dt = new Date(d instanceof Date ? d.getTime() : new Date(d).getTime());
+  dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate() + 3 - ((dt.getDay() + 6) % 7));
+  const jan4 = new Date(dt.getFullYear(), 0, 4); jan4.setHours(0,0,0,0);
+  const w1Thu = new Date(jan4);
+  w1Thu.setDate(jan4.getDate() + 3 - ((jan4.getDay() + 6) % 7));
+  return 1 + Math.round((dt - w1Thu) / (7 * 864e5));
+}
+function isoWeekRange(year, weekNum){
+  const jan4 = new Date(year, 0, 4); jan4.setHours(0,0,0,0);
+  const w1Mon = new Date(jan4);
+  w1Mon.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+  const monday = new Date(w1Mon);
+  monday.setDate(w1Mon.getDate() + (weekNum - 1) * 7);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  return 'W'+weekNum+' ('+(monday.getMonth()+1)+'.'+monday.getDate()+'–'+(sunday.getMonth()+1)+'.'+sunday.getDate()+')';
+}
+function dataYear(){
+  if(dataYear._v) return dataYear._v;
+  let y = new Date().getFullYear();
+  for(const r of (DATA.po||[])){
+    const s = r.deliveryDate || r.preDeliveryDate;
+    if(s){ const m = String(s).match(/(20\d{2})/); if(m){ y = +m[1]; break; } }
+  }
+  return (dataYear._v = y);
+}
 
 </script>
 <script id="ext">
@@ -1455,7 +1919,7 @@ function recsKind(supplier, month, weekly){
   return list;
 }
 function monthFromName(n){ const ms=String(n||'').match(/\d{1,2}/g)||[]; for(const x of ms){ const v=+x; if(v>=1&&v<=12) return v+'月'; } return '待排月'; }
-function weeklyMonths(){ const s=new Set(); for(const r of DATA.po) if(isWeekly(r)&&r.month) s.add(r.month); return [...s].sort((a,b)=>parseInt(a)-parseInt(b)); }
+function weeklyMonths(){ const s=new Set(); for(const r of (DATA.weekly||[])) if(r.month) s.add(r.month); return [...s].sort((a,b)=>parseInt(a)-parseInt(b)); }
 function renderDonutEl(elId, load, title){
   const el=document.getElementById(elId); if(!el) return;
   const over=load>1, col=loadColor(load);
@@ -1476,11 +1940,11 @@ function renderWeekly(){
 
   /* 收集在途数据按 (供应商,月份) 的 remaining */
   const inMap=new Map();
-  DATA.po.forEach(r=>{ if(isWeekly(r)) return; if(sup && r.supplier!==sup) return; if(mSel!=='全部月份' && r.month!==mSel) return;
+  DATA.po.forEach(r=>{ if(sup && r.supplier!==sup) return; if(mSel!=='全部月份' && r.month!==mSel) return;
     const k=key(r.supplier, r.month||'—'); if(!inMap.has(k)) inMap.set(k,{rem:0,pur:0,recs:[]}); const e=inMap.get(k); e.rem+=r.remaining; e.pur+=r.purchase; e.recs.push(r); });
   /* 收集周计划数据按 (供应商,preDeliveryMonth) 的 purchase + 最早待交货日期 */
   const wkMap=new Map(); const wkMinIso=new Map(); const wkMinDate=new Map();
-  DATA.po.forEach(r=>{ if(!isWeekly(r)) return; if(sup && r.supplier!==sup) return; if(mSel!=='全部月份' && r.month!==mSel) return;
+  DATA.weekly.forEach(r=>{ if(sup && r.supplier!==sup) return; if(mSel!=='全部月份' && r.month!==mSel) return;
     const k=key(r.supplier, r.month||'—'); if(!wkMap.has(k)) wkMap.set(k,{pur:0,recs:[]}); const e=wkMap.get(k); e.pur+=r.purchase; e.recs.push(r);
     if(r.preDeliveryIso){ if(!wkMinIso.has(k) || r.preDeliveryIso<wkMinIso.get(k)){ wkMinIso.set(k,r.preDeliveryIso); wkMinDate.set(k,r.preDeliveryDate); } } });
 
@@ -1501,7 +1965,7 @@ function renderWeekly(){
     }).filter(w=>w.used>0);
     rowsArr.push({name, mon, remNow:inVal.rem, purNow:inVal.pur, purSim:wkVal.pur, cap,
       loadNow:cap>0?inVal.rem/cap:0, loadSim:cap>0?(inVal.rem+wkVal.pur)/cap:0,
-      remainCap: Math.max(0, cap-(inVal.rem+wkVal.pur)), weekDetail, effRaw: capEffRaw(name),
+      remainCap: Math.max(0, cap-(inVal.rem+wkVal.pur)), rawRemain: cap-(inVal.rem+wkVal.pur), weekDetail, effRaw: capEffRaw(name),
       preDate:wkMinDate.get(k)||'—'}); });
   rowsArr.sort((a,b)=> b.loadSim-a.loadSim || a.name.localeCompare(b.name, 'zh'));
 
@@ -1520,22 +1984,263 @@ function renderWeekly(){
   const tb=$('#wkTbl tbody');
   if(tb){ if(!rowsArr.length){ tb.innerHTML='<tr><td colspan="9" class="empty">暂无数据，请导入周计划或选择有订单的供应商</td></tr>'; }
     else { tb.innerHTML=rowsArr.map(r=>{
-      const wkHtml = r.weekDetail.length
-        ? '<div style="font-size:11px;line-height:1.7;">'+r.weekDetail.map(w=>'<span class="tag '+(w.load>1?'warn':'ok')+'" title="在途 '+fmt(w.inW)+' + 周计划 '+fmt(w.plW)+' ／ 周产能 '+fmt(w.cap)+'">W'+w.w+' '+fmt(w.used)+'/'+fmt(w.cap)+' · 剩 '+fmt(w.rem)+'</span> ').join('')+'</div>'
+      const wkCell = r.weekDetail.length
+        ? '<a href="#" class="spu-count wk-cap-link" data-sup="'+escHtml(r.name)+'" data-mon="'+r.mon+'">查看 '+r.weekDetail.length+' 周 ▸</a>'
         : '<span class="sf-empty">—</span>';
-      const remCell = r.effRaw>0 ? fmt(r.remainCap) : '<span style="color:var(--muted)">待填</span>';
-      return '<tr class="clickable" data-sup="'+escHtml(r.name)+'" data-mon="'+r.mon+'"><td title="'+escHtml(r.name)+'">'+supShort(r.name)+'</td><td>'+r.mon+'</td><td class="num">'+fmt(r.remNow)+'</td><td class="num">'+fmt(r.purSim)+'</td><td class="num">'+(r.loadNow*100).toFixed(0)+'%</td><td class="num">'+(r.loadSim*100).toFixed(0)+'%</td><td class="num"><b>'+remCell+'</b></td><td>'+wkHtml+'</td><td>'+(r.preDate)+'</td></tr>';
+      const remCell = r.effRaw>0 ? (r.rawRemain<0 ? '<b style="color:#e03131">超出 '+fmt(-r.rawRemain)+'</b>' : '<b>'+fmt(r.remainCap)+'</b>') : '<span style="color:var(--muted)">待填</span>';
+      return '<tr class="clickable" data-sup="'+escHtml(r.name)+'" data-mon="'+r.mon+'"><td title="'+escHtml(r.name)+'">'+supShort(r.name)+'</td><td>'+r.mon+'</td><td class="num">'+fmt(r.remNow)+'</td><td class="num">'+fmt(r.purSim)+'</td><td class="num">'+(r.loadNow*100).toFixed(0)+'%</td><td class="num">'+(r.loadSim*100).toFixed(0)+'%</td><td class="num"><b>'+remCell+'</b></td><td>'+wkCell+'</td><td>'+(r.preDate)+'</td></tr>';
     }).join(''); } }
 
-  /* 周计划明细表 */
+  if(tb) tb.onclick = e=>{ const a=e.target.closest('a.wk-cap-link'); if(!a) return; e.preventDefault(); openWkCapModal(a.dataset.sup, a.dataset.mon); };
+  /* 周计划明细表（SPU + 订单数；日期范围筛选；待交货日期末列） */
   const dtb=$('#wkDetailTbl tbody');
-  if(dtb){ const wkRows=DATA.po.filter(r=>isWeekly(r) && (!sup || r.supplier===sup) && (mSel==='全部月份' || r.month===mSel)).sort((a,b)=>{ const da=a.preDeliveryDate||'', db=b.preDeliveryDate||''; if(da!==db) return da<db?-1:1; return (a.supplier||'').localeCompare(b.supplier||'','zh'); });
+  if(dtb){
+    let wkRows=DATA.weekly.filter(r=> (!sup || r.supplier===sup) && (mSel==='全部月份' || r.month===mSel));
+    /* 日期范围筛选 */
+    const dFrom=$('#wkDFrom').value, dTo=$('#wkDTo').value;
+    if(dFrom || dTo){
+      wkRows=wkRows.filter(r=>{
+        if(!r.preDeliveryIso) return false;
+        if(dFrom && r.preDeliveryIso < dFrom) return false;
+        if(dTo && r.preDeliveryIso > dTo) return true;
+        return true;
+      });
+    }
+    wkRows.sort((a,b)=>{ const da=a.preDeliveryDate||'', db=b.preDeliveryDate||''; if(da!==db) return da<db?-1:1; return (a.supplier||'').localeCompare(b.supplier||'','zh'); });
+    /* 按(供应商, SPU)聚合汇总：同一供应商+同一SPU的多条记录合并为一行，订单数求和 */
+    const spuMap = new Map();
+    wkRows.forEach(r => {
+      const k = (r.supplier||'') + '\x00' + (r.spu||'—');
+      if (!spuMap.has(k)) spuMap.set(k, { supplier: r.supplier, spu: r.spu||'—', purchase: 0, materialName: r.materialName||'', preDeliveryDate: r.preDeliveryDate||'—', cnt: 0 });
+      const e = spuMap.get(k);
+      e.purchase += (r.purchase || 0);
+      e.cnt++;
+      if (r.materialName && !e.materialName) e.materialName = r.materialName;
+    });
+    const aggRows = [...spuMap.values()];
     if(!wkRows.length){ dtb.innerHTML='<tr><td colspan="5" class="empty">暂无周计划明细</td></tr>'; }
-    else { dtb.innerHTML=wkRows.map((r,ri)=>'<tr class="clickable wk-detail-row" data-ri="'+ri+'"><td>'+(r.preDeliveryDate||'—')+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+(r.spu||'—')+'</td><td>'+(r.materialName||'')+'</td><td class="num">'+fmt(r.purchase)+'</td></tr>').join('');
-      dtb.onclick=e=>{ const tr=e.target.closest('tr.wk-detail-row'); if(!tr) return; const row=wkRows[+tr.dataset.ri]; if(row) openSpuModal(row.supplier, buildSpuRow(row.supplier, row.poNo, row.spu)); }; } }
+    else {
+      /* 按日期所在周计算产能负荷率提示 */
+      const loadHint = (dFrom||dTo) ? (() => {
+        const capTotal = [...new Set(wkRows.map(r=>r.supplier))].reduce((s,n)=>s+capOf(n),0);
+        const used = wkRows.reduce((s,r)=>s+(r.purchase||0),0);
+        return capTotal>0 ? ' · 筛选范围负荷率 '+(used/capTotal*100).toFixed(1)+'%' : '';
+      })() : '';
+      dtb.innerHTML='<tr><td colspan="5" style="font-size:14px;color:var(--muted);padding:4px 8px;">共 '+aggRows.length+' 项（'+wkRows.length+' 条原始）'+loadHint+'</td></tr>'+aggRows.map(r=>'<tr class="clickable wk-detail-row"><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+(r.spu||'—')+'</td><td class="num"><a href="#" class="spu-count wk-spu-link" data-sup="'+escHtml(r.supplier)+'" data-spu="'+escHtml(r.spu||'—')+'">'+fmt(r.purchase)+'</a></td><td>'+(r.materialName||'')+'</td><td>'+(r.preDeliveryDate||'—')+'</td></tr>').join('');
+      dtb.onclick=e=>{ const a=e.target.closest('a.wk-spu-link'); if(a){ e.preventDefault(); openSkuModal(a.dataset.sup, a.dataset.spu, ''); return; } };
+    }
+    /* 绑定日期筛选按钮 */
+    $('#wkDApply').onclick=()=>renderWeekly();
+    $('#wkDClear').onclick=()=>{ $('#wkDFrom').value=''; $('#wkDTo').value=''; renderWeekly(); };
+  }
 
-  $('#wkCrumb').textContent = (sup?supShort(sup):'全部供应商')+' / '+(mSel==='全部月份'?'全部月份':mSel);
   $('#wkNote').innerHTML = '现有负荷 = 在途剩余收料 ÷ 有效产能；本周计划负荷 = (在途剩余收料 + 周计划数量) ÷ 有效产能。周计划按预计交货日期纳入对应月份。周产能占用明细按 ISO 自然周（周一始）拆分，周产能 = 月有效产能 ÷ 该月周数，格式为「W周次 已占用/周产能 · 剩余」。'+(wm.length?(' 已导入周计划月份：'+wm.join('、')):' 尚未导入周计划文件');
+
+  /* 预估产能计算初始化 */
+  initCapCalc();
+}
+
+/* ---------- 预估产能计算 ---------- */
+function initCapCalc(){
+  const sSel=$('#calcSup'), dFrom=$('#calcDateFrom'), dTo=$('#calcDateTo');
+  if(!sSel) return;
+  fillSupSel(sSel, null);
+  if(dFrom) dFrom.value='';
+  if(dTo) dTo.value='';
+  $('#calcRun').onclick=runCapCalc;
+  $('#calcReset').onclick=()=>{ $('#calcCap').value=''; if(dFrom)dFrom.value=''; if(dTo)dTo.value=''; $('#calcResult').innerHTML='<span style="color:var(--muted)">请设置条件后点击计算</span>'; };
+  $('#calcResult').innerHTML='<span style="color:var(--muted)">请设置条件后点击计算</span>';
+}
+function runCapCalc(){
+  const supName=$('#calcSup').value;
+  const capInput=$('#calcCap').value;
+  const dFromStr=$('#calcDateFrom').value, dToStr=$('#calcDateTo').value;
+  const df=dFromStr?new Date(dFromStr):null, dt=dToStr?new Date(dToStr):null;
+  if(df) df.setHours(0,0,0,0); if(dt) dt.setHours(23,59,59,999);
+  const cap = capInput && !isNaN(+capInput) ? Math.max(0, +capInput) : (supName ? capOf(supName) : 0);
+  const inRecs = DATA.po.filter(r=>{
+    if(supName && supName!=='全部' && r.supplier!==supName) return false;
+    if(df||dt){ const d=parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }
+    return true;
+  });
+  const wkRecs = DATA.weekly.filter(r=>{
+    if(supName && supName!=='全部' && r.supplier!==supName) return false;
+    if(df||dt){ const d=parseDeliverDate(r.preDeliveryDate)||parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }
+    return true;
+  });
+  const inRem=inRecs.reduce((s,r)=>s+(r.remaining||0),0), inRec=inRecs.reduce((s,r)=>s+(r.received||0),0), inPur=inRecs.reduce((s,r)=>s+(r.purchase||0),0);
+  const wkPur=wkRecs.reduce((s,r)=>s+(r.purchase||0),0);
+  const totalUsed=inRem+wkPur, remain=Math.max(0,cap-totalUsed), loadPct=cap>0?totalUsed/cap*100:0;
+  const spuSet=new Set(inRecs.map(r=>r.spu||r.materialCode||'—'));
+  const col=loadColor(cap>0?totalUsed/cap:0);
+  /* 订单明细：按 PO+SPU 聚合 */
+  const g=new Map();
+  inRecs.forEach(r=>{ const k=(r.poNo||'—')+'\x1f'+(r.spu||r.materialCode||'—'); if(!g.has(k)) g.set(k,{poNo:r.poNo||'—',spu:r.spu||r.materialCode||'—',sup:r.supplier,name:r.materialName||'',rec:0,rem:0,pur:0,dd:r.deliveryDate||'—'}); const e=g.get(k); e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; });
+  const detail=[...g.values()].sort((a,b)=>b.rem-a.rem);
+  const detHtml = detail.length
+    ? '<div class="tbl-scroll" style="max-height:300px;margin-top:10px;"><table class="mini"><thead><tr><th>采购订单编号</th><th>SPU</th><th>供应商</th><th class="r">已收</th><th class="r">剩余</th><th class="r">计划</th><th>交期</th></tr></thead><tbody>'+detail.map(d=>'<tr><td>'+escHtml(d.poNo)+'</td><td>'+escHtml(d.spu)+'</td title="'+escHtml(d.sup)+'">'+supShort(d.sup)+'</td><td class="r">'+fmt(d.rec)+'</td><td class="r">'+fmt(d.rem)+'</td><td class="r">'+fmt(d.pur)+'</td><td>'+escHtml(d.dd)+'</td></tr>').join('')+'</tbody></table></div>'
+    : '<div style="margin-top:10px;color:var(--muted)">该范围内无订单明细</div>';
+  $('#calcResult').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px;">'
+    + '<div style="background:var(--amber-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">在途剩余</div><div style="font-size:20px;font-weight:700;color:var(--amber);">'+fmt(inRem)+'</div></div>'
+    + '<div style="background:var(--green-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">已收</div><div style="font-size:20px;font-weight:700;color:var(--green);">'+fmt(inRec)+'</div></div>'
+    + '<div style="background:var(--primary-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">周计划数量</div><div style="font-size:20px;font-weight:700;color:var(--primary);">'+fmt(wkPur)+'</div></div>'
+    + '<div style="background:#f3f0ff;border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">设定产能</div><div style="font-size:20px;font-weight:700;color:var(--violet);">'+(capInput&&!isNaN(+capInput)?fmt(cap):'<span style="font-size:13px;color:var(--muted)">'+fmt(cap)+' (系统值)</span>')+'</div></div>'
+    + '<div style="background:'+(loadPct>100?'var(--red-soft)':'var(--green-soft)')+';border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">已占用 / 剩余产能</div><div style="font-size:18px;font-weight:700;color:'+col+';">'+fmt(totalUsed)+' / <b>'+fmt(remain)+'</b></div></div>'
+    + '<div style="background:'+(loadPct>100?'var(--red-soft)':loadSoft(totalUsed/cap))+';border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">占用率</div><div style="font-size:20px;font-weight:700;color:'+col+';">'+loadPct.toFixed(1)+'%</div></div>'
+    + '</div>'
+    + '<div style="font-size:14px;color:var(--muted);padding:6px 0;">筛选：'+(supName&&supName!=='全部'?supShort(supName)+' · ':'全部供应商')+(dFromStr||dToStr?' '+dFromStr+' ~ '+dToStr:' 全部日期')+' | SPU 数：<b>'+spuSet.size+'</b> | 订单数：<b>'+inRecs.length+'</b>'+(capInput&&!isNaN(+capInput)?'':' | 产能来源：系统默认值 ('+fmt(cap)+')，可在上方输入框自定义')+'</div>'
+    + detHtml;
+}
+
+/* ---------- 工具模块：预估产能计算（日期范围） ---------- */
+function parseDeliverDate(s){
+  if(!s) return null;
+  const m1 = String(s).match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if(m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
+  const m2 = String(s).match(/(\d{1,2})月(\d{1,2})日/);
+  if(m2) return new Date(dataYear(), +m2[1]-1, +m2[2]);
+  return null;
+}
+function renderTool(){
+  const sSel=$('#toolSup'); if(sSel) fillSupSel(sSel, null);
+  /* 填充模拟目标月份 */
+  const mSel=$('#toolSimMon');
+  if(mSel){ mSel.innerHTML='<option value="">全部月份</option>'; months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mSel.appendChild(o); }); }
+  $('#toolResult').innerHTML='<span style="color:var(--muted)">请设置条件后点击计算</span>';
+  $('#toolRun').onclick=runToolCalc;
+  $('#toolReset').onclick=()=>{ $('#toolCap').value=''; $('#toolDateFrom').value=''; $('#toolDateTo').value=''; $('#toolSimQty').value='0'; $('#toolResult').innerHTML='<span style="color:var(--muted)">请设置条件后点击计算</span>'; };
+  $('#toolSimRun').onclick=runToolSim;
+}
+function runToolCalc(){
+  const supName=$('#toolSup').value;
+  const capInput=$('#toolCap').value;
+  const dFrom=$('#toolDateFrom').value, dTo=$('#toolDateTo').value;
+  const df=dFrom?new Date(dFrom):null, dt=dTo?new Date(dTo):null;
+  if(df) df.setHours(0,0,0,0); if(dt) dt.setHours(23,59,59,999);
+  const cap = capInput && !isNaN(+capInput) ? Math.max(0,+capInput) : (supName&&supName!=='全部'?capOf(supName):0);
+  const inRecs = DATA.po.filter(r=>{
+    if(supName&&supName!=='全部'&&r.supplier!==supName) return false;
+    if(df||dt){ const d=parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }
+    return true;
+  });
+  const wkRecs = DATA.weekly.filter(r=>{
+    if(supName&&supName!=='全部'&&r.supplier!==supName) return false;
+    if(df||dt){ const d=parseDeliverDate(r.preDeliveryDate)||parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }
+    return true;
+  });
+  const inRem=inRecs.reduce((s,r)=>s+(r.remaining||0),0), inRec=inRecs.reduce((s,r)=>s+(r.received||0),0), inPur=inRecs.reduce((s,r)=>s+(r.purchase||0),0);
+  const wkPur=wkRecs.reduce((s,r)=>s+(r.purchase||0),0);
+  const totalUsed=inRem+wkPur, remain=Math.max(0,cap-totalUsed), loadPct=cap>0?totalUsed/cap*100:0;
+  const spuSet=new Set(inRecs.map(r=>r.spu||r.materialCode||'—'));
+  const col=loadColor(cap>0?totalUsed/cap:0);
+  const g=new Map();
+  inRecs.forEach(r=>{ const k=(r.poNo||'—')+'\x1f'+(r.spu||r.materialCode||'—'); if(!g.has(k)) g.set(k,{poNo:r.poNo||'—',spu:r.spu||r.materialCode||'—',sup:r.supplier,name:r.materialName||'',rec:0,rem:0,pur:0,dd:r.deliveryDate||'—'}); const e=g.get(k); e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; });
+  const detail=[...g.values()].sort((a,b)=>b.rem-a.rem);
+  const detHtml = detail.length? '<div class="tbl-scroll" style="max-height:340px;margin-top:10px;"><table class="mini"><thead><tr><th>采购订单编号</th><th>SPU</th><th>供应商</th><th class="r">已收</th><th class="r">剩余</th><th class="r">计划</th><th>交期</th></tr></thead><tbody>'+detail.map(d=>'<tr><td>'+escHtml(d.poNo)+'</td><td>'+escHtml(d.spu)+'</td><td title="'+escHtml(d.sup)+'">'+supShort(d.sup)+'</td><td class="r">'+fmt(d.rec)+'</td><td class="r">'+fmt(d.rem)+'</td><td class="r">'+fmt(d.pur)+'</td><td>'+escHtml(d.dd)+'</td></tr>').join('')+'</tbody></table></div>' : '<div style="margin-top:10px;color:var(--muted)">该范围内无在途明细</div>';
+  $('#toolResult').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px;">'
+    + '<div style="background:var(--amber-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">在途剩余</div><div style="font-size:20px;font-weight:700;color:var(--amber);">'+fmt(inRem)+'</div></div>'
+    + '<div style="background:var(--green-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">已收</div><div style="font-size:20px;font-weight:700;color:var(--green);">'+fmt(inRec)+'</div></div>'
+    + '<div style="background:var(--primary-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">周计划数量</div><div style="font-size:20px;font-weight:700;color:var(--primary);">'+fmt(wkPur)+'</div></div>'
+    + '<div style="background:#f3f0ff;border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">设定产能</div><div style="font-size:20px;font-weight:700;color:var(--violet);">'+(capInput&&!isNaN(+capInput)?fmt(cap):'<span style="font-size:13px;color:var(--muted)">'+fmt(cap)+' (系统值)</span>')+'</div></div>'
+    + '<div style="background:'+(loadPct>100?'var(--red-soft)':'var(--green-soft)')+';border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">已占用 / 剩余产能</div><div style="font-size:18px;font-weight:700;color:'+col+';">'+fmt(totalUsed)+' / <b>'+fmt(remain)+'</b></div></div>'
+    + '<div style="background:'+(loadPct>100?'var(--red-soft)':loadSoft(totalUsed/cap))+';border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">占用率</div><div style="font-size:20px;font-weight:700;color:'+col+';">'+loadPct.toFixed(1)+'%</div></div>'
+    + '</div>'
+    + '<div style="font-size:14px;color:var(--muted);padding:6px 0;">筛选：'+(supName&&supName!=='全部'?supShort(supName)+' · ':'全部供应商')+(dFrom||dTo?' '+dFrom+' ~ '+dTo:' 全部日期')+' | SPU 数：<b>'+spuSet.size+'</b> | 订单数：<b>'+inRecs.length+'</b>'+(capInput&&!isNaN(+capInput)?'':' | 产能来源：系统默认值 ('+fmt(cap)+')')+'</div>'
+    + detHtml
+    /* 按ISO自然周拆分明细 */
+    + (function(){
+      if(!inRecs.length && !wkRecs.length) return '';
+      const weekMap = new Map();
+      inRecs.forEach(r=>{
+        const d=parseDeliverDate(r.deliveryDate); if(!d) return;
+        const iso=isoWeekOfYear(d); const wLabel='W'+iso;
+        if(!weekMap.has(wLabel)) weekMap.set(wLabel,{label:wLabel,inW:0,inR:0,inP:0,plW:0});
+        const e=weekMap.get(wLabel); e.inW+=(r.remaining||0); e.inR+=(r.received||0); e.inP+=(r.purchase||0);
+      });
+      wkRecs.forEach(r=>{
+        const d=parseDeliverDate(r.preDeliveryDate)||parseDeliverDate(r.deliveryDate); if(!d) return;
+        const iso=isoWeekOfYear(d); const wLabel='W'+iso;
+        if(!weekMap.has(wLabel)) weekMap.set(wLabel,{label:wLabel,inW:0,inR:0,inP:0,plW:0});
+        weekMap.get(wLabel).plW+=(r.purchase||0);
+      });
+      const wRows=[...weekMap.values()].sort((a,b)=>a.label.localeCompare(b.label,'en',{numeric:true}));
+      const tUsed=wRows.reduce((s,w)=>s+w.inW+w.plW,0);
+      return '<div style="margin-top:14px;"><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;">按 ISO 自然周拆分</div>'
+      +'<table class="mini"><thead><tr><th>周</th><th class="r">在途剩余</th><th class="r">已收</th><th class="r">计划</th><th class="r">周计划量</th><th class="r">已占用</th><th class="r">周产能</th><th class="r">剩余</th><th>负荷率</th></tr></thead><tbody>'
+      +wRows.map(w=>{ const u=w.inW+w.plW; const rc=cap>0?u/cap:0; const rm=Math.max(0,cap-u); return '<tr><td>'+w.label+'</td><td class="r">'+fmt(w.inW)+'</td><td class="r">'+fmt(w.inR)+'</td><td class="r">'+fmt(w.inP)+'</td><td class="r">'+fmt(w.plW)+'</td><td class="r">'+fmt(u)+'</td><td class="r">'+fmt(cap)+'</td><td class="r" style="color:'+(rm<0?'var(--red)':'inherit')+'">'+(rm<0?'<b>超额 '+fmt(-rm)+'</b>':fmt(rm))+'</td><td>'+pctText(rc*100)+'</td></tr>'; }).join('')
+      +'</tbody><tfoot><tr><td>合计</td><td class="r">'+wRows.reduce((s,w)=>s+w.inW,0)+'</td><td class="r">'+wRows.reduce((s,w)=>s+w.inR,0)+'</td><td class="r">'+wRows.reduce((s,w)=>s+w.inP,0)+'</td><td class="r">'+wRows.reduce((s,w)=>s+w.plW,0)+'</td><td class="r"><b>'+fmt(tUsed)+'</b></td><td class="r">'+fmt(cap*wRows.length)+'</td><td class="r">'+Math.max(0,cap*wRows.length-tUsed)+'</td><td>'+pctText(cap*wRows.length>0?tUsed/(cap*wRows.length)*100:0)+'</td></tr></tfoot></table></div>';
+    })();
+}
+/* ---------- What-if 周计划模拟 ---------- */
+function runToolSim(){
+  const simQty = Math.max(0, parseInt($('#toolSimQty').value)||0);
+  if(simQty <= 0){ $('#toolResult').innerHTML = '<span style="color:var(--muted)">请输入大于 0 的假设周计划数量</span>'; return; }
+  const supName = $('#toolSup').value;
+  const simMon = $('#toolSimMon').value;
+  const capInput = $('#toolCap').value;
+  const cap = capInput && !isNaN(+capInput) ? Math.max(0,+capInput) : (supName&&supName!=='全部'?capOf(supName):0);
+  /* 筛选在途记录（同 runToolCalc 的逻辑） */
+  let recs = DATA.po;
+  if(supName && supName!=='全部') recs=recs.filter(r=>r.supplier===supName);
+  if(simMon) recs=recs.filter(r=>r.month===simMon);
+  /* 筛选周计划（目标月份） */
+  let wkRecs = DATA.weekly;
+  if(supName && supName!=='全部') wkRecs=wkRecs.filter(r=>r.supplier===supName);
+  if(simMon) wkRecs=wkRecs.filter(r=>r.month===simMon);
+  const inRem=recs.reduce((s,r)=>s+(r.remaining||0),0), inRec=recs.reduce((s,r)=>s+(r.received||0),0);
+  const curWkPur=wkRecs.reduce((s,r)=>s+(r.purchase||0),0);
+  const newTotalUsed = inRem + curWkPur + simQty;
+  const newRemain = Math.max(0, cap - newTotalUsed);
+  const newLoadPct = cap>0 ? newTotalUsed/cap*100 : 0;
+  const oldUsed = inRem + curWkPur;
+  const oldLoadPct = cap>0 ? oldUsed/cap*100 : 0;
+  const colNew = loadColor(cap>0?newTotalUsed/cap:0);
+  const colOld = loadColor(cap>0?oldUsed/cap:0);
+  const deltaLoad = newLoadPct - oldLoadPct;
+  const deltaStr = deltaLoad>=0 ? '+'+deltaLoad.toFixed(1)+'%' : deltaLoad.toFixed(1)+'%';
+  $('#toolResult').innerHTML =
+    '<div style="background:var(--violet-soft);border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid var(--violet);">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;">📊 WHAT-IF 模拟结果</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">'
+    +'<div style="background:var(--panel);border-radius:8px;padding:10px;"><div style="font-size:14px;color:var(--muted);">假设新增量</div><div style="font-size:20px;font-weight:700;color:var(--violet);">'+fmt(simQty)+'</div></div>'
+    +'<div style="background:var(--panel);border-radius:8px;padding:10px;"><div style="font-size:14px;color:var(--muted);">模拟后占用率</div><div style="font-size:20px;font-weight:700;color:'+colNew+';">'+newLoadPct.toFixed(1)+'%</div></div>'
+    +'<div style="background:var(--panel);border-radius:8px;padding:10px;"><div style="font-size:14px;color:var(--muted);">原占用率</div><div style="font-size:18px;font-weight:400;color:'+colOld+';">'+oldLoadPct.toFixed(1)+'% <span style="color:'+(deltaLoad>0?'var(--red)':'var(--green)')+';">('+deltaStr+')</span></div></div>'
+    +'<div style="background:var(--panel);border-radius:8px;padding:10px;"><div style="font-size:14px;color:var(--muted);">模拟后剩余产能</div><div style="font-size:20px;font-weight:700;color:'+(newRemain<0?'var(--red)':'var(--green)')+';">'+(newRemain<0?'<b>超额 '+fmt(-newRemain)+'</b>':fmt(newRemain))+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6;">'
+    +'条件：'+(supName&&supName!=='全部'?supShort(supName):'全部供应商')+(simMon?' · '+simMon:' 全部月份')
+    +' | 在途剩余 '+fmt(inRem)+' + 已有周计划 '+fmt(curWkPur)+' + <b>假设新增 '+fmt(simQty)+'</b> = 总占用 '+fmt(newTotalUsed)
+    +' | 产能 '+(capInput&&!isNaN(+capInput)?'自定义':('系统值'))+' = '+fmt(cap)
+    +(newLoadPct>100 ? ' ⚠️ <b style="color:var(--red)">超载！超出产能 '+(newLoadPct-100).toFixed(0)+'%</b>' : '')
+    +'</div></div>';
+}
+/* ---------- 工具模块：SPU 查询 ---------- */
+function renderSpu(){
+  $('#spuResult').innerHTML='<span style="color:var(--muted)">请输入 SPU 后点击查询</span>';
+  $('#spuQRun').onclick=runSpuQuery;
+  $('#spuQReset').onclick=()=>{ $('#spuQ').value=''; $('#spuResult').innerHTML='<span style="color:var(--muted)">请输入 SPU 后点击查询</span>'; };
+}
+function runSpuQuery(){
+  const q=($('#spuQ').value||'').trim();
+  if(!q){ $('#spuResult').innerHTML='<span style="color:var(--muted)">请输入 SPU（前4位）</span>'; return; }
+  const recs=DATA.po.filter(r=> (r.spu||r.materialCode||'').indexOf(q)===0);
+  if(!recs.length){ $('#spuResult').innerHTML='<span style="color:var(--muted)">未找到 SPU 「'+escHtml(q)+'」 的在途记录</span>'; return; }
+  const supSet=new Set(recs.map(r=>r.supplier));
+  const poSet=new Set(recs.map(r=>r.poNo||'—').filter(Boolean));
+  const remSum=recs.reduce((s,r)=>s+(r.remaining||0),0), recSum=recs.reduce((s,r)=>s+(r.received||0),0), purSum=recs.reduce((s,r)=>s+(r.purchase||0),0);
+  const g=new Map();
+  recs.forEach(r=>{ const k=r.supplier+'\x1f'+(r.poNo||'—'); if(!g.has(k)) g.set(k,{sup:r.supplier,po:r.poNo||'—',name:r.materialName||'',rec:0,rem:0,pur:0,dd:r.deliveryDate||'—'}); const e=g.get(k); e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; });
+  const detail=[...g.values()].sort((a,b)=>b.rem-a.rem);
+  $('#spuResult').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px;">'
+    + '<div style="background:var(--primary-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">关联供应商</div><div style="font-size:20px;font-weight:700;color:var(--primary);">'+supSet.size+'</div></div>'
+    + '<div style="background:#f3f0ff;border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">订单单据编号数</div><div style="font-size:20px;font-weight:700;color:var(--violet);">'+poSet.size+'</div></div>'
+    + '<div style="background:var(--amber-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">在途剩余</div><div style="font-size:20px;font-weight:700;color:var(--amber);">'+fmt(remSum)+'</div></div>'
+    + '<div style="background:var(--green-soft);border-radius:10px;padding:12px;"><div style="font-size:14px;color:var(--muted);">已收 / 计划</div><div style="font-size:18px;font-weight:700;color:var(--green);">'+fmt(recSum)+' / '+fmt(purSum)+'</div></div>'
+    + '</div>'
+    + '<div class="tbl-scroll" style="max-height:360px;"><table class="mini"><thead><tr><th>供应商</th><th>采购订单编号</th><th>物料名称</th><th class="r">已收</th><th class="r">剩余</th><th class="r">计划</th><th>货期</th></tr></thead><tbody>'+detail.map(d=>'<tr><td title="'+escHtml(d.sup)+'">'+supShort(d.sup)+'</td><td>'+escHtml(d.po)+'</td><td>'+escHtml(d.name)+'</td><td class="r">'+fmt(d.rec)+'</td><td class="r">'+fmt(d.rem)+'</td><td class="r">'+fmt(d.pur)+'</td><td>'+escHtml(d.dd)+'</td></tr>').join('')+'</tbody></table></div>';
 }
 
 /* ---------- 周计划 Excel 解析 ---------- */
@@ -1569,7 +2274,8 @@ function parseWeeklyXLSX(file){
       const g=new Map(); let excl=0;
       for(let i=hi+1;i<rows.length;i++){ const row=rows[i]||[]; let sup=(row[hm.supplier]||'').toString().trim(); if(!sup) continue; if(sup.indexOf('国际站')>=0){ excl++; continue; }
         const code=(row[hm.materialCode]||'').toString(); const spu=four(code); const qty=num(row[hm.qty]);
-        const k=sup+'\x00'+spu;
+        /* 按 (供应商, 物料编码) 分组，保留每个独立 SKU */
+        const k=sup+'\x00'+code;
         if(!g.has(k)){ g.set(k,{supplier:sup,spu,materialCode:code,materialName:(row[hm.materialName]||'').toString(),spec:(hm.spec!=null?row[hm.spec]:'')||'',owner:(hm.owner!=null?row[hm.owner]:'')||'',opNote:(hm.opNote!=null?row[hm.opNote]:'')||'',purNote:(hm.purNote!=null?row[hm.purNote]:'')||'',purchase:0}); }
         const e=g.get(k); e.purchase+=qty; const mn=(row[hm.materialName]||'').toString(); if(mn && mn.length < (e.materialName.length||999)) e.materialName=mn;
       }
@@ -1579,7 +2285,7 @@ function parseWeeklyXLSX(file){
       const preDeliveryDate = preDeliveryIso ? `${parseInt(preDeliveryIso.slice(5,7))}月${parseInt(preDeliveryIso.slice(8,10))}日` : '—';
       const preDeliveryMonth = preDeliveryIso ? `${parseInt(preDeliveryIso.slice(5,7))}月` : month;
       const out=[...g.values()].map(e=>({supplier:e.supplier, month:preDeliveryMonth, planDate:planDate, preDeliveryDate:preDeliveryDate, preDeliveryIso:preDeliveryIso, received:0, remaining:e.purchase, purchase:e.purchase, spu:e.spu, materialCode:e.materialCode, materialName:e.materialName, spec:e.spec, owner:e.owner, opNote:e.opNote, purNote:e.purNote, deliveryDate:'', poNo:'', lineTag:'', timeTag:'', docType:'周计划', creator:'', kind:'weekly', status:'待下单', bizClose:''}));
-      DATA.po = DATA.po.filter(r=>r.kind!=='weekly').concat(out);
+      DATA.weekly = out;
       DATA.meta.poRows = DATA.po.length;
       resolve('周计划已导入：'+out.length+' 个 SPU（'+g.size+' 家供应商'+(excl?('，已排除 '+excl+' 行非供应商'):'')+'），月份标记为 '+month);
     }catch(err){ reject(err); } };
@@ -1589,16 +2295,17 @@ function parseWeeklyXLSX(file){
 }
 
 /* ---------- 导航调度（7 页） ---------- */
-const _NAV={total:'navTotal',weekly:'navWeekly',supplier:'navSupplier',monthly:'navMonthly',newProduct:'navNewProduct',line:'navLine',time:'navTime'};
-const _PAGE={total:'pageTotal',weekly:'pageWeekly',supplier:'pageSupplier',monthly:'pageMonthly',newProduct:'pageNewProduct',line:'pageLine',time:'pageTime'};
+const _NAV={total:'navTotal',weekly:'navWeekly',supplier:'navSupplier',monthly:'navMonthly',newProduct:'navNewProduct',line:'navLine',time:'navTime',tool:'navTool',spu:'navSpu'};
+const _PAGE={total:'pageTotal',weekly:'pageWeekly',supplier:'pageSupplier',monthly:'pageMonthly',newProduct:'pageNewProduct',line:'pageLine',time:'pageTime',tool:'pageTool',spu:'pageSpu'};
 goPage = function(p){
   currentPage=p;
   showDetail=false;
   $('#overviewView').style.display='';
   $('#detailView').style.display='none';
   if($('#toggleDetail')) $('#toggleDetail').textContent='📋 切换明细';
-  Object.values(_PAGE).forEach(id=>{ const el=document.getElementById(id); if(el) el.hidden=true; });
-  const pe=_PAGE[p]; if(pe){ const el=document.getElementById(pe); if(el) el.hidden=false; }
+  /* 用 style.display 直接控制显隐（避免 hidden 属性与 flex 布局交互时部分浏览器不重排的怪异行为） */
+  Object.values(_PAGE).forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  const pe=_PAGE[p]; if(pe){ const el=document.getElementById(pe); if(el){ el.style.display=''; el.removeAttribute('hidden'); } }
   Object.values(_NAV).forEach(id=>{ const b=document.getElementById(id); if(b) b.classList.toggle('active', _NAV[p]===id); });
   render();
 };
@@ -1613,10 +2320,11 @@ function renderSupplierView(){
   if(!name){ box.innerHTML='<div class="kpi"><div class="label">提示</div><div class="val" style="font-size:15px">请在右上角选择供应商</div></div>'; const d=$('#svDonut'); if(d) d.innerHTML=''; const d2=$('#svDonut2'); if(d2) d2.innerHTML=''; return; }
   const cap=capOf(name);
   const now=agg(recsKind(name,mon,false)), sim=agg(recsKind(name,mon,true));
-  const remNow=now.remaining, weeklyPur=sim.purchase; const loadNow=cap>0?remNow/cap:0, loadSim=cap>0?(remNow+weeklyPur)/cap:0;
-  renderDonutEl('svDonut', loadNow, '现有负荷率'); renderDonutEl('svDonut2', loadSim, '本周计划负荷率');
-  $('#svDonutInfo').innerHTML = '现有剩余 '+fmt(remNow)+' / 有效产能 '+fmt(cap);
-  $('#svDonutInfo2').innerHTML = '本周计划 '+fmt(sim.purchase)+' / 有效产能 '+fmt(cap);
+  const remNow=now.remaining, weeklyPur=sim.purchase; const loadNow=cap>0?remNow/cap:0;
+  renderDonutEl('svDonut', loadNow, '在途负荷率');
+  /* 区分"剩余在途数量"(未收料) 与 "产能剩余"(有效产能−已占用) —— 两者计算口径不同 */
+  const capRemain = cap - remNow;
+  $('#svDonutInfo').innerHTML = '剩余在途 <b>'+fmt(remNow)+'</b> ｜ 有效产能 <b>'+fmt(cap)+'</b> ｜ 产能剩余 <b>'+fmt(capRemain)+'</b>';
   const spuCount = new Set(recsKind(name,mon,null).map(r=>r.spu||r.materialCode||'—')).size;
   const facRaw = capFactoryRaw(name), effRaw = capEffRaw(name);
   box.innerHTML=[
@@ -1629,24 +2337,124 @@ function renderSupplierView(){
   ].map(c=>'<div class="kpi"><div class="label"><span class="swatch" style="background:'+c.color+'"></span>'+c.label+'</div><div class="val">'+c.val+'</div></div>').join('');
   $('#svCrumb').textContent = (supShort(name)) + ' / ' + (mon || '全部月份');
   renderSvDetail(name, mon);
+  renderSvWeekly(name, mon);
+}
+function openSkuModal(supplier, spu, month){
+  const ov=$('#spuModal'); if(!ov) return;
+  const recs=[...DATA.po, ...DATA.weekly].filter(r=>r.supplier===supplier && (r.spu||r.materialCode)===(spu) && (!month||month==='全部'||r.month===month));
+  if(!recs.length){ showToast('未找到 SPU '+spu+' 的子数据'); return; }
+  const g=new Map();
+  recs.forEach(r=>{ const k=r.materialCode||r.spu||'—'; if(!g.has(k)) g.set(k,{sku:k,name:r.materialName||'',rec:0,rem:0,pur:0,dds:[]}); const e=g.get(k); e.rec+=(r.received||0); e.rem+=(r.remaining||0); e.pur+=(r.purchase||0); if(r.deliveryDate) e.dds.push(r.deliveryDate); });
+  const rows=[...g.values()].sort((a,b)=>b.rem-a.rem);
+  const totR=rows.reduce((s,r)=>s+r.rec,0), totM=rows.reduce((s,r)=>s+r.rem,0), totP=rows.reduce((s,r)=>s+r.pur,0);
+  ov.querySelector('.spu-modal-title').textContent='SPU '+spu+' · 逐 SKU 明细';
+  ov.querySelector('.spu-modal-sub').textContent='供应商 '+supShort(supplier)+' · '+rows.length+' 个 SKU · 已收 '+fmt(totR)+' / 剩余 '+fmt(totM)+' / 计划 '+fmt(totP);
+  ov.querySelector('.spu-modal-body').innerHTML='<table class="mini"><thead><tr><th>SKU（物料编码）</th><th>物料名称</th><th class="r">已收</th><th class="r">剩余</th><th class="r">计划</th><th>交期</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+escHtml(r.sku)+'</td><td>'+escHtml(r.name)+'</td><td class="r">'+fmt(r.rec)+'</td><td class="r">'+fmt(r.rem)+'</td><td class="r">'+fmt(r.pur)+'</td><td>'+(r.dds.length?[...new Set(r.dds)].sort(ddCmp).join('、'):'—')+'</td></tr>').join('')+'</tbody></table>';
+  ov.style.display='flex';
 }
 function openSpuModal(supplier, spuRow){
   const ov=$('#spuModal'); if(!ov) return;
-  const skus=spuRow.skus.length? spuRow.skus : [{code:spuRow.spu, name:spuRow.name, rec:spuRow.received, rem:spuRow.remaining, pur:spuRow.purchase}];
+  const rawSkus = spuRow.skus;
+  const skus = (rawSkus && (rawSkus.length > 0 || rawSkus.size > 0)) ? (Array.isArray(rawSkus) ? rawSkus : [...rawSkus.values()]) : [{code:spuRow.spu, name:spuRow.name, rec:spuRow.received, rem:spuRow.remaining, pur:spuRow.purchase}];
   ov.querySelector('.spu-modal-title').textContent = 'SPU '+spuRow.spu+' · '+spuRow.name;
-  ov.querySelector('.spu-modal-sub').textContent = '供应商：'+supplier+' ｜ 计划 '+fmt(spuRow.purchase)+' · 已收 '+fmt(spuRow.received)+' · 剩余 '+fmt(spuRow.remaining)+' · 完成率 '+(spuRow.completion*100).toFixed(0)+'%';
+  ov.querySelector('.spu-modal-sub').textContent = '供应商：'+supplier+' ｜ 计划 '+fmt(spuRow.purchase)+' · 已收 '+fmt(spuRow.received)+' · 剩余 '+fmt(spuRow.remaining);
   ov.querySelector('.spu-modal-body').innerHTML = '<table class="mini"><thead><tr><th>SKU（物料编码）</th><th>物料名称</th><th class="r">采购订单数量</th><th class="r">已收</th><th class="r">剩余</th></tr></thead><tbody>'
     + skus.map((s,i)=>'<tr class="clickable" data-i="'+i+'"><td>'+s.code+'</td><td>'+(s.name||'')+'</td><td class="r">'+fmt(s.pur)+'</td><td class="r">'+fmt(s.rec)+'</td><td class="r">'+fmt(s.rem)+'</td></tr>').join('')
     + '</tbody></table>';
-  ov.querySelector('.spu-modal-body').onclick = e=>{ const tr=e.target.closest('tr[data-i]'); if(!tr) return; colFilters={}; colFilters['供应商']={sel:new Set([supplier]),text:''}; colFilters['SPU']={sel:new Set([spuRow.spu]),text:''}; state.supplier=supplier; closeSpuModal(); goPage('detail'); };
+  /* 行点击不再跳转，仅展示SKU明细 */
   ov.style.display='flex';
 }
 function closeSpuModal(){ const ov=$('#spuModal'); if(ov) ov.style.display='none'; }
 
+/* ---------- 每周 SPU 详情弹窗（供应商详情页 svWeekTbl 点击） ---------- */
+function openWeeklySpuModal(supplier, weekLabel, weekStart){
+  const ov=$('#spuModal'); if(!ov) return;
+  /* 筛选该供应商在该 ISO 周内的所有在途记录（不含周计划） */
+  const recs=DATA.po.filter(r=>r.supplier===supplier && !isWeekly(r) && dateInIsoWeek(r.deliveryDate, weekStart));
+  if(!recs.length){ showToast('该周无 SPU 在途数据'); return; }
+  /* 按 SPU 分组 */
+  const g=new Map();
+  recs.forEach(r=>{
+    const spu=r.spu||r.materialCode||'—';
+    if(!g.has(spu)) g.set(spu,{spu,name:'',rec:0,rem:0,pur:0,dds:[]});
+    const e=g.get(spu); e.rec+=(r.received||0); e.rem+=(r.remaining||0); e.pur+=(r.purchase||0);
+    if(r.materialName && (!e.name || r.materialName.length<e.name.length)) e.name=r.materialName;
+    if(r.deliveryDate) e.dds.push(r.deliveryDate);
+  });
+  const rows=[...g.values()].sort((a,b)=>b.rem-a.rem);
+  const totR=rows.reduce((s,r)=>s+r.rec,0), totM=rows.reduce((s,r)=>s+r.rem,0), totP=rows.reduce((s,r)=>s+r.pur,0);
+  /* 该 ISO 周对应的分配周产能（最大余数法，合计=月产能） */
+  const wkMonth=(weekStart.getMonth()+1)+'月';
+  const wkWeeks=weeksOfMonthOrNow(wkMonth);
+  const wkCaps=weeklyCapList(capOf(supplier), wkWeeks);
+  const wkKey=new Date(weekStart).toISOString().slice(0,10);
+  const wkIdx=wkWeeks.findIndex(w=> new Date(w.start).toISOString().slice(0,10)===wkKey);
+  const thisWkCap = wkIdx>=0 ? wkCaps[wkIdx] : capOf(supplier);
+  const loadPct = thisWkCap>0 ? totM/thisWkCap*100 : 0;
+  ov.querySelector('.spu-modal-title').textContent='SPU 列表 · '+weekLabel;
+  ov.querySelector('.spu-modal-sub').textContent=rows.length+' 个 SPU · 已收 '+fmt(totR)+' / 剩余 '+fmt(totM)+' / 计划 '+fmt(totP);
+  ov.querySelector('.spu-modal-body').innerHTML='<table class="mini"><thead><tr><th>SPU</th><th>物料名称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>交货日期</th></tr></thead><tbody>'
+    +rows.map(r=>{
+      const sortedDds=[...new Set(r.dds)].sort(ddCmp);
+      const earliest=sortedDds[0];
+      const todayStr=new Date().toISOString().slice(0,10);
+      const dueTag=earliest && ddCmp(earliest,todayStr)<0?'<span style="color:#e03131;font-size:14px">逾期 '+Math.ceil((new Date()-new Date(earliest.replace(/(\d{4})-(\d{1,2})-(\d{1,2})/,'$1/$2/$3')))/86400000)+' 天</span>':'<span style="color:var(--green);font-size:14px">'+(r.dds.length?'正常':'—')+'</span>';
+      return '<tr><td>'+escHtml(r.spu)+'</td><td>'+escHtml(r.name)+'</td><td class="r">'+fmt(r.pur)+'</td><td class="r">'+fmt(r.rec)+'</td><td class="r">'+fmt(r.rem)+'</td><td style="font-size:12px;white-space:nowrap;">'+sortedDds.join('、')+(r.dds.length?' '+dueTag:'')+'</td></tr>';
+    }).join('')
+    + '<tr class="sum-row"><td>汇总</td><td></td>'
+    + '<td class="r">'+fmt(totP)+'</td><td class="r">'+fmt(totR)+'</td><td class="r">'+fmt(totM)+'</td>'
+    + '<td style="font-size:14px;white-space:nowrap;">'+(rows.length?'共 '+rows.length+' 个 SPU':'—')+'</td></tr>'
+    + '</tbody></table>';
+  ov.style.display='flex';
+}
+
 /* ---------- 预交货日期 / SPU 子数据辅助（addDays / weeklyPreDelivery 已前置到主脚本块，供 buildRows 启动期调用） ---------- */
 function buildSpuRow(supplier,poNo,spu){ const recs=DATA.po.filter(r=>r.supplier===supplier && (poNo?r.poNo===poNo:true) && (r.spu||r.materialCode||'—')===(spu||'—')); if(!recs.length) return null; let rec=0,rem=0,pur=0; const skus=new Map(); let name0=''; const ddSet=[]; recs.forEach(r=>{ rec+=r.received; rem+=r.remaining; pur+=r.purchase; const mc=r.materialCode||''; if(mc){ if(!skus.has(mc)) skus.set(mc,{code:mc,name:r.materialName||'',rec:r.received,rem:r.remaining,pur:r.purchase}); else { const e=skus.get(mc); e.rec+=r.received; e.rem+=r.remaining; e.pur+=r.purchase; } } if(r.materialName && (!name0||r.materialName.length<name0.length)) name0=r.materialName; if(r.deliveryDate) ddSet.push(r.deliveryDate); }); const completion=pur>0?rec/pur:0; const dds=[...new Set(ddSet)].sort(ddCmp); return {spu,name:name0||spu,completion,received:rec,remaining:rem,purchase:pur,orders:pur,skus:[...skus.values()],dd:dds.length?dds[0]:'—'}; }
-function renderSvDetail(supplier, mon){ const tb=$('#svDetailTbl tbody'); if(!tb) return; let list=DATA.po.filter(r=>r.supplier===supplier); if(mon) list=list.filter(r=>r.month===mon); const rows=buildRows(list); const frows=filteredRows(rows, svColFilters); if(!frows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">'+(rows.length?'无匹配筛选数据':'无数据')+'</td></tr>'; svUpdateFilterUI(); return; } tb.innerHTML=frows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; /* 行点击：设置筛选并跳转到在途概览明细 */ const row=frows[+tr.dataset.ri]; if(row){ colFilters={}; colFilters['供应商']={sel:new Set([name]),text:''}; colFilters['SPU']={sel:new Set([row.spu]),text:''}; goPage('total'); } }; svUpdateFilterUI(); }
+function renderSvDetail(supplier, mon){ const tb=$('#svDetailTbl tbody'); if(!tb) return; let list=DATA.po.filter(r=>r.supplier===supplier); if(mon) list=list.filter(r=>r.month===mon); const rows=buildRows(list); const frows=filteredRows(rows, svColFilters); if(!frows.length){ tb.innerHTML='<tr><td colspan="14" class="empty">'+(rows.length?'无匹配筛选数据':'无数据')+'</td></tr>'; svUpdateFilterUI(); return; } tb.innerHTML=frows.map((r,ri)=>'<tr class="spu-row clickable" data-ri="'+ri+'"><td>'+r.poNo+'</td><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+r.spu+'</td><td>'+r.name+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+pgCell(r.completion*100)+'</td><td>'+r.dd+'</td><td><span class="tag '+r.di.cls+'">'+r.di.txt+'</span></td><td>'+r.lineTag+'</td><td>'+timeCell(r)+'</td><td>'+r.docType+'</td><td>'+r.creator+'</td></tr>').join(''); tb.onclick=e=>{ const tr=e.target.closest('tr.spu-row'); if(!tr) return; const row=frows[+tr.dataset.ri]; if(row){ const spuRow=buildSpuRow(supplier, row.poNo, row.spu); if(spuRow) openSpuModal(supplier, spuRow); else showToast('未找到 SPU 明细数据'); } }; svUpdateFilterUI(); }
 
+function renderSvWeekly(name, mon){
+  const tb=$('#svWeekTbl tbody'); if(!tb) return;
+  const list=DATA.po.filter(r=>r.supplier===name && (!mon || r.month===mon));
+  if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">无在途数据</td></tr>'; return; }
+  const cap=capOf(name);
+  const weeks=weeksOfMonthOrNow(mon);
+  const wkCaps=weeklyCapList(cap, weeks);
+  const rows=[];
+  weeks.forEach((w, i)=>{
+    const wRecs=list.filter(r=>dateInIsoWeek(r.deliveryDate,w.start));
+    if(!wRecs.length) return;
+    const a=agg(wRecs);
+    const used=a.remaining;
+    const rawRem = wkCaps[i] - used;
+    const rem=Math.max(0, rawRem);
+    const spuCount=new Set(wRecs.map(r=>r.spu||r.materialCode||'—')).size;
+    rows.push({label:w.label, start:w.start, inW:a.remaining, rec:a.received, cap:wkCaps[i], used, rem, rawRem, comp:a.completion, spuCount});
+  });
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">该时间段无按周分布的在途数据</td></tr>'; return; }
+  const sumInW=rows.reduce((s,r)=>s+r.inW,0), sumRec=rows.reduce((s,r)=>s+r.rec,0),
+        sumCap=wkCaps.reduce((s,v)=>s+v,0), sumUsed=rows.reduce((s,r)=>s+r.used,0),
+        sumRem=rows.reduce((s,r)=>s+r.rem,0), sumRawRem=rows.reduce((s,r)=>s+r.rawRem,0);
+  const TODO='<span style="color:var(--muted)">—</span>';
+  tb.innerHTML=rows.map(r=>{
+    const overage=r.rawRem<0? -r.rawRem:0;
+    const remCell = r.rawRem<0 ? '<b style="color:#e03131">超出 '+fmt(overage)+'</b>' : '<b>'+fmt(r.rem)+'</b>';
+    return '<tr data-label="'+escHtml(r.label)+'" data-start="'+r.start.toISOString()+'">'
+      +'<td style="white-space:nowrap;">'+r.label+'</td>'
+      +'<td class="num">'+fmt(r.inW)+'</td><td class="num">'+fmt(r.rec)+'</td>'
+      +'<td class="num">'+fmt(r.cap)+'</td><td class="num">'+fmt(r.used)+'</td>'
+      +'<td class="num">'+remCell+'</td>'
+      +'<td class="num"><a href="#" class="spu-count wk-spu-detail" data-sup="'+escHtml(name)+'" data-wk="'+escHtml(r.label)+'" data-start="'+r.start.toISOString()+'">'+r.spuCount+' 个</a></td></tr>';
+  }).join('')
+  + '<tr class="sum-row" style="background:var(--bg2);font-weight:700;"><td>汇总</td>'
+    + '<td class="num">'+fmt(sumInW)+'</td><td class="num">'+fmt(sumRec)+'</td>'
+    + '<td class="num">'+fmt(sumCap)+'</td><td class="num">'+fmt(sumUsed)+'</td>'
+    + '<td class="num">'+(sumRawRem<0?'<b style="color:#e03131">超出 '+fmt(-sumRawRem)+'</b>':fmt(sumRem))+'</td>'
+    + '<td class="num">'+(rows.reduce((s,r)=>s+r.spuCount,0))+' 个</td></tr>';
+
+  tb.querySelectorAll('a.wk-spu-detail').forEach(a=>{
+    a.addEventListener('click',function(e){ e.preventDefault(); openWeeklySpuModal(this.dataset.sup,this.dataset.wk,new Date(this.dataset.start)); });
+  });
+}
 /* ---------- 产线/时效聚合辅助 ---------- */
 function tagAgg(items, tagField){
   const map=new Map();
@@ -1688,6 +2496,8 @@ function renderLineView(){
   if(!state.lineTag && arr.length) state.lineTag = arr[0].tag;
   renderLineProgress(map, state.lineTag);
   if(pillsBox) pillsBox.onclick = e=>{ const c=e.target.closest('.chip'); if(!c) return; state.lineTag = c.dataset.tag; renderLineView(); };
+  /* 产类数据（从月度数据页迁移至此） */
+  renderCatData();
 }
 
 function renderLineProgress(map, tag){
@@ -1698,7 +2508,7 @@ function renderLineProgress(map, tag){
   title.textContent = tag + ' 进度';
   const totalProgress=e.pur>0?e.rec/e.pur*100:0;
   const mons=[...e.mons.values()].sort(tagMonthSort);
-  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
+  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:14px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
   if(mons.length){
     html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
       + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
@@ -1728,6 +2538,7 @@ function renderTimeView(){
   if(!state.timeTag && arr.length) state.timeTag = arr[0].tag;
   renderTimeProgress(map, state.timeTag);
   if(pillsBox) pillsBox.onclick = e=>{ const c=e.target.closest('.chip'); if(!c) return; state.timeTag = c.dataset.tag; renderTimeView(); };
+  renderTimeCatData();
 }
 
 function renderTimeProgress(map, tag){
@@ -1738,7 +2549,7 @@ function renderTimeProgress(map, tag){
   title.textContent = tag + ' 进度';
   const totalProgress=e.pur>0?e.rec/e.pur*100:0;
   const mons=[...e.mons.values()].sort(tagMonthSort);
-  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:12px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
+  let html='<div style="margin-bottom:12px;"><b>总进度</b> '+pgCell(totalProgress)+'<div style="font-size:14px;color:var(--muted);margin-top:4px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</div></div>';
   if(mons.length){
     html+='<div style="margin-bottom:6px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
       + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
@@ -1747,19 +2558,83 @@ function renderTimeProgress(map, tag){
   box.innerHTML=html;
 }
 
+/* 时效分类数据：按时效标签(timeTag)分组展示各供应商数据（与产线分析产类数据并列） */
+const TIME_ORDER = ['爆款新品','新品','首次返单','自备货','新变体','其它时效'];
+function renderTimeCatData(){
+  const box = $('#tmCatData'); if(!box) return;
+  const sv = state.supplier || '全部', mv = state.month || '全部';
+  const list = DATA.po.filter(r => {
+    if(sv!=='全部' && r.supplier!==sv) return false;
+    if(mv!=='全部' && r.month!==mv) return false;
+    return true;
+  });
+  /* 收集 时效标签 -> { 供应商 -> {purchase, remaining, spuSet} } */
+  const tagLoad = {}; TIME_ORDER.forEach(t=>tagLoad[t]={});
+  for(const r of list){
+    const t = r.timeTag;
+    if(!t) continue;
+    if(!tagLoad[t]) tagLoad[t] = {};
+    if(!tagLoad[t][r.supplier]) tagLoad[t][r.supplier] = {purchase:0,remaining:0,spuSet:new Set()};
+    tagLoad[t][r.supplier].purchase += (r.purchase||0);
+    tagLoad[t][r.supplier].remaining += (r.remaining||0);
+    tagLoad[t][r.supplier].spuSet.add(r.spu||r.materialCode||'—');
+  }
+  const TODO = '<span style="color:var(--muted)">待填</span>';
+  let blocks = [];
+  for(const t of TIME_ORDER){
+    const supMap = tagLoad[t];
+    const supNames = Object.keys(supMap);
+    if(!supNames.length){ continue; }
+    let totPur=0, totRem=0, totSpu=0;
+    const rows = supNames.map(name=>{
+      const d = supMap[name];
+      const spuCt = d.spuSet.size;
+      const comp = d.purchase>0 ? (d.purchase-d.remaining)/d.purchase : 0;
+      totPur+=d.purchase; totRem+=d.remaining; totSpu+=spuCt;
+      return '<tr><td>'+escHtml(supShort(name))+'</td>'
+        +'<td class="num">'+fmt(d.purchase)+'</td>'
+        +'<td class="num">'+fmt(d.remaining)+'</td>'
+        +'<td class="num"><a href="#" class="spu-count" data-kind="tcat" data-tag="'+escHtml(t)+'" data-sup="'+escHtml(name)+'" title="'+t+' · '+escHtml(name)+' 的SPU明细">'+spuCt+'</a></td></tr>';
+    }).join('');
+    blocks.push('<div class="cat-block" style="flex:0 0 calc(50% - 6px);min-width:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;">'
+      +'<div class="cat-head" style="padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;">'
+      +'<span class="cat-name" style="font-weight:700;font-size:14px;color:var(--primary);">'+t+'</span>'
+      +'<span class="cat-sum" style="font-size:14px;color:var(--muted);">'+supNames.length+' 家 · '+totSpu+' SPU · 计划 '+fmt(totPur)+' · 剩余 '+fmt(totRem)+'</span></div>'
+      +'<div class="tbl-scroll" style="max-height:280px;"><table class="mini"><thead><tr><th>供应商</th><th class="num">计划</th><th class="num">剩余</th><th class="num">SPU数</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'</div>');
+  }
+  if(!blocks.length){ box.innerHTML = '<p style="padding:20px;color:var(--muted)">当前筛选条件下暂无时效分类数据</p>'; return; }
+  box.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:12px;">'+blocks.join('')+'</div>';
+  box.querySelectorAll('a.spu-count[data-kind="tcat"]').forEach(a => {
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      const tg = this.dataset.tag, sup = this.dataset.sup;
+      const tlist = list.filter(r => r.timeTag === tg && r.supplier === sup);
+      if(!tlist.length) { showToast('该分类暂无明细数据'); return; }
+      const aggregated = aggRecs(tlist);
+      const {html: h, spus} = buildSpusHtml(aggregated);
+      showSpusModal(tg + ' · ' + supShort(sup), sup + ' · ' + tg + ' ('+(mv||'全部')+')', h, spus, function(s){
+        colFilters={}; colFilters['时效标签']={sel:new Set([tg]),text:''}; colFilters['供应商']={sel:new Set([sup]),text:''};
+        if(sv!=='全部') state.supplier=sv;
+        if(mv!=='全部') state.month=mv;
+      });
+    });
+  });
+}
+
 /* ---------- 标签 SPU 弹窗 ---------- */
 function buildSpusHtml(e){
   const spus=[...e.spus.values()].sort((a,b)=>b.pur-a.pur);
   const mons=[...e.mons.values()].sort(tagMonthSort);
   const totalProgress=e.pur>0?e.rec/e.pur*100:0;
-  let html='<div style="margin-bottom:10px;"><b>总进度</b> '+pgCell(totalProgress)+'<span style="font-size:12px;color:var(--muted);margin-left:10px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</span></div>';
+  let html='<div style="margin-bottom:10px;"><b>总进度</b> '+pgCell(totalProgress)+'<span style="font-size:14px;color:var(--muted);margin-left:10px;">计算：收料数量 '+fmt(e.rec)+' ÷ 计划 '+fmt(e.pur)+' × 100% = '+totalProgress.toFixed(0)+'%</span></div>';
   if(mons.length){
     html+='<div style="margin-bottom:10px;"><b>月度进度</b></div><table class="mini"><thead><tr><th>月份</th><th class="r">计划</th><th class="r">已收</th><th>进度</th></tr></thead><tbody>'
       + mons.map(m=>'<tr><td>'+m.month+'</td><td class="r">'+fmt(m.pur)+'</td><td class="r">'+fmt(m.rec)+'</td><td>'+pgCell(m.pur>0?m.rec/m.pur*100:0)+'</td></tr>').join('')
       + '</tbody></table>';
   }
-  html+='<div style="margin-top:14px;"><b>SPU 列表</b></div><table class="mini"><thead><tr><th>SPU</th><th>物料名称</th><th>供应商简称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>完成率</th><th>交期</th></tr></thead><tbody>'
-    + spus.map((s,i)=>{ const di=spuOverdueDi(s.dds, s.incDds, s.rec, s.rem, s.pur); return '<tr class="clickable" data-i="'+i+'"><td>'+s.spu+'</td><td>'+(s.name||'')+'</td><td title="'+escHtml(s.supplier)+'">'+(s.supplierShort||s.supplier)+'</td><td class="r">'+fmt(s.pur)+'</td><td class="r">'+fmt(s.rec)+'</td><td class="r">'+fmt(s.rem)+'</td><td>'+pgCell(s.pur>0?s.rec/s.pur*100:0)+'</td><td><span class="tag '+di.cls+'">'+di.txt+'</span></td></tr>'; }).join('')
+  html+='<div style="margin-top:14px;"><b>SPU 列表</b></div><table class="mini"><thead><tr><th>SPU</th><th>物料名称</th><th>供应商简称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>交期</th><th class="r">SKU数</th></tr></thead><tbody>'
+    + spus.map((s,i)=>{ const di=spuOverdueDi(s.dds, s.incDds, s.rec, s.rem, s.pur); return '<tr class="clickable" data-i="'+i+'"><td>'+s.spu+'</td><td>'+(s.name||'')+'</td><td title="'+escHtml(s.supplier)+'">'+supShort(s.supplier)+'</td><td class="r">'+fmt(s.pur)+'</td><td class="r">'+fmt(s.rec)+'</td><td class="r">'+fmt(s.rem)+'</td><td><span class="tag '+di.cls+'">'+di.txt+'</span></td><td class="num"><a href="#" class="spu-count spu-sku-link" data-i="'+i+'" data-sup="'+escHtml(s.supplier)+'" data-spu="'+escHtml(s.spu)+'">'+(s.skus?s.skus.size:'—')+'</a></td></tr>'; }).join('')
     + '</tbody></table>';
   return {html, spus};
 }
@@ -1768,7 +2643,23 @@ function showSpusModal(title, sub, html, spus, drillFn){
   ov.querySelector('.spu-modal-title').textContent=title;
   ov.querySelector('.spu-modal-sub').textContent=sub;
   const body=$('#tagModalBody'); body.innerHTML=html;
-  body.onclick = ev=>{ const tr=ev.target.closest('tr[data-i]'); if(!tr) return; const s=spus[+tr.dataset.i]; if(!s) return; if(drillFn) drillFn(s); closeTagModal(); goPage('detail'); };
+  body.onclick = ev=> {
+    /* SKU数链接点击 → 弹出SKU明细 */
+    const skuLink = ev.target.closest('a.spu-sku-link');
+    if(skuLink){ ev.preventDefault(); ev.stopPropagation();
+      const s = spus[+skuLink.dataset.i];
+      if(!s || !s.skus || !s.skus.size){ showToast('该SPU无SKU明细'); return; }
+      const skuRows = [...s.skus.values()].sort((a,b)=>b.rem-a.rem);
+      const sTotR=skuRows.reduce((x,r)=>x+r.rec,0), sTotM=skuRows.reduce((x,r)=>x+r.rem,0), sTotP=skuRows.reduce((x,r)=>x+r.pur,0);
+      closeTagModal();
+      openSpuModal(skuLink.dataset.sup, {spu:s.spu, name:s.name, received:sTotR, remaining:sTotM, purchase:sTotP, completion:sTotP>0?sTotR/sTotP:0, skus:skuRows});
+      return;
+    }
+    /* SPU行点击 → 仅关闭弹窗，不跳转 */
+    const tr=ev.target.closest('tr[data-i]'); if(!tr) return;
+    const s=spus[+tr.dataset.i]; if(!s) return;
+    if(drillFn) drillFn(s); closeTagModal();
+  };
   ov.style.display='flex';
 }
 function buildDrill(o){
@@ -1794,8 +2685,12 @@ function aggRecs(recs){
   for(const r of recs){
     e.rec+=r.received||0; e.rem+=r.remaining||0; e.pur+=r.purchase||0; e.sup.add(r.supplier);
     const spu=r.spu||r.materialCode||'—'; const k=r.supplier+'\x00'+spu;
-    if(!e.spus.has(k)) e.spus.set(k,{spu,name:r.materialName||'',supplier:r.supplier,supplierShort:supShort(r.supplier),rec:0,rem:0,pur:0,dds:[],incDds:[]});
+    if(!e.spus.has(k)) e.spus.set(k,{spu,name:r.materialName||'',supplier:r.supplier,supplierShort:supShort(r.supplier),rec:0,rem:0,pur:0,dds:[],incDds:[],skus:new Map()});
     const s=e.spus.get(k); s.rec+=r.received||0; s.rem+=r.remaining||0; s.pur+=r.purchase||0; if(r.deliveryDate){ s.dds.push(r.deliveryDate); if((r.remaining||0)>0) s.incDds.push(r.deliveryDate); }
+    /* 收集该SPU下的SKU(materialCode)明细 */
+    const mc=r.materialCode||r.spu||'—';
+    if(!s.skus.has(mc)) s.skus.set(mc,{code:mc,name:r.materialName||'',rec:0,rem:0,pur:0,dds:[]});
+    const sku=s.skus.get(mc); sku.rec+=(r.received||0); sku.rem+=(r.remaining||0); sku.pur+=(r.purchase||0); if(r.deliveryDate) sku.dds.push(r.deliveryDate);
     const m=r.month||'—'; if(!e.mons.has(m)) e.mons.set(m,{month:m,rec:0,rem:0,pur:0}); const mo=e.mons.get(m); mo.rec+=r.received||0; mo.rem+=r.remaining||0; mo.pur+=r.purchase||0;
   }
   return e;
@@ -1810,7 +2705,20 @@ function openRecsModal(title, recs, drillFn){
 function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none'; }
 
 /* ---------- 事件绑定 ---------- */
-['navWeekly','navSupplier','navMonthly','navNewProduct','navLine','navTime'].forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(id.replace('nav','').toLowerCase())); });
+/* 导航 id → 页面 key 显式映射（避免 navNewProduct 经 replace+toLowerCase 变成 'newproduct' 而匹配不到 'newProduct'） */
+const _NAV2PAGE={'navWeekly':'weekly','navSupplier':'supplier','navMonthly':'monthly','navNewProduct':'newProduct','navLine':'line','navTime':'time','navTool':'tool','navSpu':'spu'};
+Object.keys(_NAV2PAGE).forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(_NAV2PAGE[id])); });
+
+function initCollapse(){
+  document.querySelectorAll('.card > h3, .tcard > h3').forEach(h3=>{
+    if(h3.querySelector('.collapse-btn')) return;
+    const btn=document.createElement('button');
+    btn.className='collapse-btn'; btn.type='button'; btn.textContent='▾'; btn.title='折叠/展开';
+    btn.addEventListener('click', ()=>{ const card=h3.parentElement; card.classList.toggle('collapsed'); btn.textContent = card.classList.contains('collapsed')?'▸':'▾'; });
+    h3.insertBefore(btn, h3.firstChild);
+  });
+}
+initCollapse();
 
 /* ========== 月度数据（ISO自然周 + 周在途 + 产能负荷 + 剩余产能） ========== */
 
@@ -1878,82 +2786,215 @@ function dateInIsoWeek(dateStr, weekStart){
   const de = new Date(ds); de.setDate(de.getDate()+6); de.setHours(23,59,59,999);
   return d >= ds && d <= de;
 }
+/* 将月产能按周分配，使用最大余数法保证 Σ周产能 === 月产能（避免四舍五入导致汇总≠月产能） */
+function weeklyCapList(cap, weeks){
+  const n = weeks ? weeks.length : 0;
+  if(n <= 0) return [];
+  const total = Math.max(0, Math.round(cap));
+  const base = Math.floor(total / n);
+  let rem = total - base * n;
+  const arr = [];
+  for(let i=0;i<n;i++) arr.push(base + (i < rem ? 1 : 0));
+  return arr; // 总和 === total
+}
 
 /* 月度数据页面渲染 */
 function renderMonthlyData(){
   fillMonSel($('#monMon'), state.month);
   const mon = state.month;
   const compareBox = $('#monCompareTable');
-  const capBox = $('#monCapTbl');
-  if(!compareBox || !capBox) return;
+  if(!compareBox) return;
 
-  /* ---- 各供应商月度对比表 ---- */
+  /* ---- 筛选 ---- */
+  const fInput = $('#monSupFilter');
+  const fClear = $('#monSupFilterClear');
+  const fTxt = (fInput && fInput.value || '').trim().toLowerCase();
+
+  /* ---- 合并表：各供应商月度对比 + 产能负荷 ---- */
   const allSups = [...new Set(DATA.po.map(r=>r.supplier).filter(Boolean))];
-  const rows = allSups.map(name => {
+  let rows = allSups.map(name => {
     const list = recsOf(name, mon);
     const a = agg(list);
     const spuCount = new Set(list.map(r=>r.spu||r.materialCode||'—')).size;
-    return { name, short: supShort(name), ...a, spuCount, recs: list };
+    const capEff = capOf(name);
+    const load = capEff > 0 ? a.purchase / capEff : 0;
+    const remainingCap = Math.max(0, capEff - a.purchase);
+    const over = a.purchase - capEff;
+    const weeks = weeksOfMonthOrNow(mon);
+    const weekSummary = weeks.map(w => {
+      const wRecs = list.filter(r => dateInIsoWeek(r.deliveryDate, w.start));
+      const wa = agg(wRecs);
+      return { w: w.w, label: w.label, ...wa };
+    }).filter(w => w.purchase > 0);
+    return { name, short: supShort(name), ...a, spuCount, recs: list,
+             effRaw: capEffRaw(name), facRaw: capFactoryRaw(name),
+             capEff, used: a.purchase, load, remainingCap, over, weekSummary };
   }).filter(r => r.purchase > 0);
 
-  compareBox.innerHTML = rows.length ? '<table class="mini"><thead><tr><th>供应商</th><th class="num">SPU数</th><th class="num">计划</th><th class="num">已收</th><th class="num">剩余</th><th>完成率</th><th>周在途</th></tr></thead><tbody>'
+  /* 按供应商名称筛选 */
+  if(fTxt) rows = rows.filter(r => (r.short||'').toLowerCase().indexOf(fTxt)>=0 || (r.name||'').toLowerCase().indexOf(fTxt)>=0);
+
+  const tot = {spu:0,pur:0,rec:0,rem:0,cap:0,usedCap:0,remCap:0};
+  rows.forEach(r=>{ tot.spu+=r.spuCount; tot.pur+=r.purchase; tot.rec+=r.received; tot.rem+=r.remaining; tot.cap+=r.capEff; tot.usedCap+=r.used; tot.remCap+=r.remainingCap; });
+
+  const tbody = compareBox.querySelector('tbody');
+  if(!tbody) return;
+  /* 只替换 tbody，保留 thead（含筛选）和 tfoot 容器 */
+  const TODO = '<span style="color:var(--muted)">待填</span>';
+  tbody.innerHTML = rows.length ? ''
     + rows.map(r => {
-      const weeks = weeksOfMonthOrNow(mon);
-      const weekSummary = weeks.map(w => {
-        const wRecs = r.recs.filter(r => dateInIsoWeek(r.deliveryDate, w.start));
-        const wa = agg(wRecs);
-        return { w: w.w, label: w.label, ...wa };
-      }).filter(w => w.purchase > 0);
-      return '<tr><td>'+r.short+'</td><td class="num">'+r.spuCount+'</td><td class="num">'+fmt(r.purchase)+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td><td>'+pgCell(r.completion*100)+'</td><td class="num"><a href="#" class="spu-count" data-sup="'+escHtml(r.name)+'" data-mon="'+(mon||'')+'" data-short="'+escHtml(r.short)+'">'+weekSummary.length+' 周</a></td></tr>';
-    }).join('') + '</tbody></table>' : '<p style="padding:20px;color:var(--muted)">选择月份后显示各供应商月度对比数据</p>';
-
-  /* ---- 产能负荷对比表（含剩余产能） ---- */
-  const capRows = suppliers
-    .map(s => {
-      const capEff = capOf(s.name);
-      const capFac = capFactoryOf(s.name);
-      const list = recsOf(s.name, mon);
-      const a = agg(list);
-      const load = capEff > 0 ? a.purchase / capEff : 0;
-      const remainingCap = Math.max(0, capEff - a.purchase);
-      const weeks = weeksOfMonthOrNow(mon);
-      const wkCap = weeks.length ? Math.round(capEff / weeks.length) : capEff; /* 周产能 = 月有效产能 ÷ 该月 ISO 周数 */
-      const weekDetail = weeks.map(w => {
-        const wRecs = list.filter(r => dateInIsoWeek(r.deliveryDate, w.start));
-        const wa = agg(wRecs);
-        return { w: w.w, label: w.label, purchase: wa.purchase, remaining: Math.max(0, wkCap - wa.purchase), cap: wkCap };
-      });
-      return { name: s.name, short: s.short, factoryCap: capFac, effCap: capEff,
-               facRaw: capFactoryRaw(s.name), effRaw: capEffRaw(s.name),
-               used: a.purchase, load, remainingCap, weekDetail };
-    })
-    .sort((a,b) => b.load - a.load);
-
-  const capBody = $('#monCapTbl tbody');
-  if(capBody) capBody.innerHTML = capRows.map(r => {
-    const wkHtml = r.weekDetail.length ? '<div style="font-size:11px;line-height:1.6;">'
-      + r.weekDetail.map(w => '<span class="tag '+ (w.purchase > w.cap ? 'warn' : 'ok') +'">W'+w.w+':'+fmt(w.purchase)+'/'+fmt(w.cap)+' 剩'+fmt(w.remaining)+'</span> ').join('')
-      + '</div>' : '<span class="sf-empty">—</span>';
-    const TODO = '<span style="color:var(--muted)">待填</span>';
-    const facCell = r.facRaw > 0 ? fmt(r.facRaw) : TODO;
-    const effCell = r.effRaw > 0 ? fmt(r.effRaw) : TODO;
-    /* 超载时直接显示超出量，避免"剩余 0"掩盖真实缺口 */
-    const over = r.used - r.effCap;
-    const remCell = r.effRaw > 0
-      ? (over > 0 ? '<b style="color:#e03131">超载 '+fmt(over)+'</b>' : '<b>'+fmt(r.remainingCap)+'</b>')
-      : TODO;
-    return '<tr><td>'+r.short+'</td><td class="num">'+facCell+'</td><td class="num">'+effCell+'</td><td class="num">'+fmt(r.used)+'</td><td class="num">'+remCell+'</td><td>'+(r.effRaw>0?pgCell(r.load*100):TODO)+'</td><td>'+wkHtml+'</td></tr>';
-  }).join('');
+      const effCell = r.effRaw > 0 ? fmt(r.effRaw) : TODO;
+      const remCell = r.effRaw > 0
+        ? (r.over > 0 ? '<b style="color:#e03131">超载 '+fmt(r.over)+'</b>' : '<b>'+fmt(r.remainingCap)+'</b>')
+        : TODO;
+      return '<tr><td>'+r.short+'</td>'
+        +'<td class="num"><a href="#" class="spu-count spu-link" data-sup="'+escHtml(r.name)+'" data-mon="'+(mon||'')+'" data-short="'+escHtml(r.short)+'">'+r.spuCount+'</a></td>'
+        +'<td class="num">'+fmt(r.purchase)+'</td><td class="num">'+fmt(r.received)+'</td><td class="num">'+fmt(r.remaining)+'</td>'
+        +'<td class="num">'+fmt(r.used)+'</td><td class="num">'+remCell+'</td>'
+        +'<td class="num"><a href="#" class="spu-count" data-sup="'+escHtml(r.name)+'" data-mon="'+(mon||'')+'" data-short="'+escHtml(r.short)+'">'+r.weekSummary.length+' 周</a></td></tr>';
+    }).join('')
+    + '<tfoot><tr><td>合计</td><td class="num">'+tot.spu+'</td><td class="num">'+fmt(tot.pur)+'</td><td class="num">'+fmt(tot.rec)+'</td><td class="num">'+fmt(tot.rem)+'</td>'
+    + '<td class="num">'+fmt(tot.usedCap)+'</td><td class="num">'+fmt(Math.max(0,tot.cap-tot.usedCap))+'</td>'
+    + '<td class="num"></td></tr></tfoot>'
+    : '<tr><td colspan="8" style="padding:20px;color:var(--muted);text-align:center;">选择月份后显示各供应商月度对比数据</td></tr>';
 
   /* 绑定周在途弹窗 */
   compareBox.querySelectorAll('.spu-count').forEach(a => {
     a.addEventListener('click', function(e){
       e.preventDefault();
-      openWeeklyModal(this.dataset.sup, this.dataset.mon || null, this.dataset.short || '');
+      if(this.classList.contains('spu-link')){
+        const sup=this.dataset.sup, m=this.dataset.mon||null;
+        const recs=DATA.po.filter(r=>r.supplier===sup && (!m || r.month===m));
+        openRecsModal((this.dataset.short||sup)+' · SPU 明细 ('+(m||'全部')+')', recs, s=>{ colFilters={}; colFilters['供应商']={sel:new Set([sup]),text:''}; colFilters['SPU']={sel:new Set([s.spu]),text:''}; if(m) state.month=m; });
+      } else {
+        openWeeklyModal(this.dataset.sup, this.dataset.mon || null, this.dataset.short || '');
+      }
     });
   });
 
-  $('#monCompareHint').textContent = mon ? mon + ' · ' + rows.length + ' 家有数据' : '';
+  $('#monCompareHint').innerHTML = mon ? '🔎 <span class="chip active">'+mon+'</span> · '+rows.length+' 家有数据' : '';
+
+  /* 绑定筛选输入 */
+  if(fInput && !fInput._bound){ fInput._bound=1; fInput.addEventListener('input', ()=>renderMonthlyData()); }
+  if(fClear && !fClear._bound){ fClear._bound=1; fClear.addEventListener('click', ()=>{ if(fInput)fInput.value=''; renderMonthlyData(); }); }
+
+  /* ---- 右栏：月度订单总数据排列表（按计划量降序） ---- */
+  const rankBox = $('#monRankTable');
+  const rankHint = $('#monRankHint');
+  if(rankBox){
+    const allRankRows = allSups.map(name => {
+      const list = recsOf(name, mon);
+      const a = agg(list);
+      const spuCt = new Set(list.map(r=>r.spu||r.materialCode||'—')).size;
+      return { name, short: supShort(name), ...a, spuCount: spuCt };
+    }).filter(r => r.purchase > 0).sort((a,b) => b.purchase - a.purchase);
+
+    rankHint.innerHTML = mon ? '按计划量降序 · '+allRankRows.length+' 家' : '';
+    const rtbody = rankBox.querySelector('tbody');
+    if(!rtbody) return;
+    if(!allRankRows.length){
+      rtbody.innerHTML = '<tr><td colspan="5" style="padding:20px;color:var(--muted);text-align:center;">选择月份后显示排序数据</td></tr>';
+    } else {
+      const rTot = allRankRows.reduce((s,r)=>{ s.rem+=r.remaining; s.pur+=r.purchase; s.spu+=r.spuCount; return s; }, {rem:0,pur:0,spu:0});
+      rtbody.innerHTML = allRankRows.map((r,i) => {
+        const top1 = i === 0;
+        const fw1 = top1 ? 600 : 500;
+        const cl1 = top1 ? 'var(--danger)' : 'var(--muted)';
+        const fw2 = top1 ? 500 : 400;
+        const cl2 = r.remaining > r.purchase*0.5 ? 'var(--danger)' : (r.remaining > r.purchase*0.2 ? 'var(--amber)' : 'var(--ink)');
+        return `<tr${top1?' style="background:var(--amber-soft);"':''}><td style="font-weight:${fw1};color:${cl1}">${i+1}</td>`
+          + `<td style="white-space:nowrap;font-weight:${fw2}">${r.short}</td>`
+          + `<td class="num" style="color:${cl2};font-weight:${top1?600:500}">${fmt(r.remaining)}</td>`
+          + `<td class="num" style="font-weight:500">${fmt(r.purchase)}</td>`
+          + `<td class="num" style="color:var(--primary);font-weight:500"><a href="#" class="spu-count spu-link" data-sup="${escHtml(r.name)}" data-mon="${mon||''}" data-short="${escHtml(r.short)}">${r.spuCount}</a></td></tr>`;
+      }).join('')
+      + '<tfoot><tr style="border-top:1.5px solid var(--line);background:var(--bg2);font-weight:600;"><td>合计</td><td>'+allRankRows.length+' 家</td><td class="num">'+fmt(rTot.rem)+'</td><td class="num">'+fmt(rTot.pur)+'</td><td class="num" style="color:var(--primary)">'+rTot.spu+'</td></tr></tfoot>';
+    }
+    /* 绑定排名表 SPU 链接点击 */
+    if(rankBox) rankBox.querySelectorAll('.spu-link').forEach(a => {
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        const sup=this.dataset.sup, m=this.dataset.mon||null;
+        const recs=DATA.po.filter(r=>r.supplier===sup && (!m || r.month===m));
+        openRecsModal((this.dataset.short||sup)+' · SPU 明细 ('+(m||'全部')+')', recs, s=>{ colFilters={}; colFilters['供应商']={sel:new Set([sup]),text:''}; colFilters['SPU']={sel:new Set([s.spu]),text:''}; if(m) state.month=m; });
+      });
+    });
+  }
+}
+/* 产类数据：按产线标签(lineTag)归一化到三大产类 + 其它产线，展示各供应商产能 */
+function catOfLineTag(lt){
+  if(!lt) return null;
+  if(lt.indexOf('布类高速线')>=0) return '布类高速线';
+  if(lt.indexOf('合成革高速线')>=0) return '合成革高速线';
+  if(lt.indexOf('拉杆箱')>=0) return '拉杆箱组装线';
+  return '其它产线';
+}
+const CAT_ORDER = ['布类高速线','合成革高速线','拉杆箱组装线','其它产线'];
+function renderCatData(){
+  const box = $('#lnCatData') || $('#monCatData'); if(!box) return;
+  const mon = state.month;
+  /* 收集 产类 -> { 供应商 -> {purchase, remaining, spuSet} } */
+  const catLoad = {}; CAT_ORDER.forEach(c=>catLoad[c]={});
+  for(const r of DATA.po){
+    if(mon && r.month!==mon) continue;
+    const c = catOfLineTag(r.lineTag);
+    if(!c) continue;
+    if(!catLoad[c][r.supplier]) catLoad[c][r.supplier]={purchase:0,remaining:0,spuSet:new Set()};
+    catLoad[c][r.supplier].purchase += (r.purchase||0);
+    catLoad[c][r.supplier].remaining += (r.remaining||0);
+    catLoad[c][r.supplier].spuSet.add(r.spu||r.materialCode||'—');
+  }
+  const TODO = '<span style="color:var(--muted)">待填</span>';
+  let blocks = [];
+  for(const c of CAT_ORDER){
+    const supMap = catLoad[c];
+    const supNames = Object.keys(supMap);
+    if(!supNames.length){ continue; }
+    let totEff=0, totFac=0, totLoad=0, totSpu=0;
+    const rows = supNames.map(name=>{
+      const capEff=capOf(name), capFac=capFactoryOf(name);
+      const facRaw=capFactoryRaw(name), effRaw=capEffRaw(name);
+      const load=supMap[name].purchase;
+      const spuCt = supMap[name].spuSet.size;
+      const rate=capEff>0?load/capEff:0;
+      totEff+=capEff; totFac+=capFac; totLoad+=load; totSpu+=spuCt;
+      const facCell=facRaw>0?fmt(facRaw):TODO;
+      const effCell=effRaw>0?fmt(effRaw):TODO;
+      return '<tr><td>'+escHtml(supShort(name))+'</td>'
+        +'<td class="num">'+effCell+'</td>'
+        +'<td class="num">'+facCell+'</td>'
+        +'<td class="num">'+fmt(load)+'</td>'
+        +'<td class="num"><a href="#" class="spu-count" data-kind="cat" data-cat="'+escHtml(c)+'" data-sup="'+escHtml(name)+'" title="'+c+' · '+escHtml(name)+' 的SPU明细">'+spuCt+'</a></td>'
+        +(effRaw>0?'<td>'+pgCell(rate*100)+'</td>':'<td>'+TODO+'</td>')+'</tr>';
+    }).join('');
+    const sat = totEff>0 ? totLoad/totEff : 0;
+    blocks.push('<div class="cat-block" style="flex:0 0 calc(50% - 6px);min-width:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;">'
+      +'<div class="cat-head" style="padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;">'
+      +'<span class="cat-name" style="font-weight:700;font-size:14px;color:var(--primary);">'+c+'</span>'
+      +'<span class="cat-sum" style="font-size:14px;color:var(--muted);">'+supNames.length+' 家 · '+totSpu+' SPU · 总有效产能 '+fmt(totEff)+' · 总负荷 '+fmt(totLoad)+' · 饱和度 '+pgCell(sat*100)+'</span></div>'
+      +'<div class="tbl-scroll" style="max-height:280px;"><table class="mini"><thead><tr><th>供应商</th><th class="num">有效产能</th><th class="num">工厂总产能</th><th class="num">该产类负荷</th><th class="num">SPU数</th><th>负荷率</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'</div>');
+  }
+  if(!blocks.length){ box.innerHTML = '<p style="padding:20px;color:var(--muted)">当前筛选条件下暂无产类数据</p>'; return; }
+  box.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:12px;">'+blocks.join('')+'</div>';
+  /* 绑定SPU数详情点击 */
+  box.querySelectorAll('a.spu-count[data-kind="cat"]').forEach(a => {
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      const cat = this.dataset.cat, sup = this.dataset.sup;
+      const list = DATA.po.filter(r => {
+        if(mon && r.month !== mon) return false;
+        return catOfLineTag(r.lineTag) === cat && r.supplier === sup;
+      });
+      if(!list.length) { showToast('该分类暂无明细数据'); return; }
+      const catAgg = aggRecs(list);
+      const {html: h, spus} = buildSpusHtml(catAgg);
+      showSpusModal(cat + ' · ' + supShort(sup), sup + ' · ' + cat + ' 分类 ('+(mon||'全部')+')', h, spus, function(s){
+        colFilters={}; colFilters['产线标签']={sel:new Set([cat]),text:''}; colFilters['供应商']={sel:new Set([sup]),text:''};
+        if(mon) state.month=mon;
+      });
+    });
+  });
 }
 function currentMonth(){ const d=new Date(); return d.getMonth()+1+'月'; }
 
@@ -1965,15 +3006,20 @@ function openWeeklyModal(supplier, monStr, supplierShort){
   const weeks = weeksOfMonthOrNow(mon);
 
   let html = '<h3 style="margin:0 0 8px;font-size:14px;">'+escHtml(supplierShort||supplier)+' · 周在途明细</h3>';
-  html += '<p style="font-size:12px;color:var(--muted);margin:0 0 10px;">'+(mon||'全部月份')+'</p>';
+  html += '<p style="font-size:14px;color:var(--muted);margin:0 0 10px;">'+(mon||'全部月份')+'</p>';
 
-  html += '<table class="mini" style="font-size:12px;"><thead><tr><th>周</th><th>SPU</th><th>物料名称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>完成率</th><th>交期</th></tr></thead><tbody>';
+  html += '<table class="mini" style="font-size:13px;"><thead><tr><th>周</th><th>SPU</th><th>物料名称</th><th class="r">计划</th><th class="r">已收</th><th class="r">剩余</th><th>交期</th></tr></thead><tbody>';
 
   let hasData = false;
+  const _cap = capOf(supplier);
+  const _wkCap = weeks.length ? Math.round(_cap/weeks.length) : _cap;
   weeks.forEach(w => {
     const wRecs = list.filter(r => dateInIsoWeek(r.deliveryDate, w.start));
     if(!wRecs.length) return;
     hasData = true;
+    const wa = agg(wRecs);
+    const _rem = Math.max(0, _wkCap - wa.remaining);
+    html += '<tr class="wk-sum"><td colspan="7" style="background:var(--bg2);font-size:14px;color:var(--muted);">'+w.label+' ｜ 在途数量 '+fmt(wa.remaining)+' · 已收数量 '+fmt(wa.received)+' · 剩余产能 '+fmt(_rem)+'</td></tr>';
     const spuMap = new Map();
     wRecs.forEach(r => {
       const spu = r.spu || r.materialCode || '—';
@@ -1987,13 +3033,14 @@ function openWeeklyModal(supplier, monStr, supplierShort){
       /* 周次单元格只在该周首行输出并纵向合并 */
       html += '<tr>' + (first ? '<td rowspan="'+spuMap.size+'" style="vertical-align:middle;white-space:nowrap;">'+w.label+'</td>' : '')
         +'<td>'+e.spu+'</td><td>'+e.name+'</td><td class="r">'+fmt(e.pur)+'</td><td class="r">'+fmt(e.rec)+'</td><td class="r">'+fmt(e.rem)+'</td>'
-        +'<td>'+pgCell(completion*100)+'</td><td>'+(e.dd||'—')+'</td></tr>';
+        +'<td>'+(e.dd||'—')+'</td></tr>';
       first = false;
     });
   });
 
-  if(!hasData) html += '<tr><td colspan="8" class="empty">该时间段无在途数据</td></tr>';
+  if(!hasData) html += '<tr><td colspan="7" class="empty">该时间段无在途数据</td></tr>';
   html += '</tbody></table>';
+  html += '<p style="font-size:14px;color:var(--muted);margin:10px 0 0;">剩余产能 = 周产能 − 在途数量（未收料）；完成率 = 已收 ÷ 计划。</p>';
 
   ov.querySelector('.spu-modal-body').innerHTML = html;
   ov.querySelector('.spu-modal-title').textContent = '周在途明细';
@@ -2001,6 +3048,41 @@ function openWeeklyModal(supplier, monStr, supplierShort){
   ov.style.display = 'flex';
 
   ov.querySelector('.spu-modal-body').onclick = null; /* 不需要下钻 */
+}
+
+/* 周计划模拟：周产能占用明细弹窗 */
+function openWkCapModal(supplier, mon){
+  const ov=document.getElementById('tagModal'); if(!ov) return;
+  const cap=capOf(supplier);
+  const weeks=weeksOfMonthOrNow(mon);
+  const wkCaps=weeklyCapList(cap, weeks);
+  const inRecs=DATA.po.filter(r=>!isWeekly(r)&&r.supplier===supplier&&(!mon||mon==='—'||r.month===mon));
+  const plRecs=DATA.weekly.filter(r=>r.supplier===supplier&&(!mon||mon==='—'||r.month===mon));
+  let html='<h3 style="margin:0 0 8px;font-size:14px;">'+escHtml(supShort(supplier))+' · 周产能占用明细</h3>';
+  html+='<p style="font-size:14px;color:var(--muted);margin:0 0 10px;">'+(mon&&mon!=='—'?mon:'全部月份')+' ｜ 有效产能 '+fmt(cap)+' ｜ 每周产能按最大余数法分配，合计 = 月产能</p>';
+  if(!weeks.length){ html+='<p class="empty">该时段无周产能数据</p>'; }
+  else {
+    html+='<table class="mini" style="font-size:12px;"><thead><tr><th>周</th><th class="r">在途数量</th><th class="r">周计划数量</th><th class="r">已占用</th><th class="r">周产能</th><th class="r">剩余产能</th><th>占用率</th></tr></thead><tbody>';
+    let totUsed=0;
+    weeks.forEach((w, i)=>{
+      const inW=inRecs.filter(r=>dateInIsoWeek(r.deliveryDate,w.start)).reduce((s,r)=>s+(r.remaining||0),0);
+      const plW=plRecs.filter(r=>dateInIsoWeek(r.preDeliveryDate||r.deliveryDate,w.start)).reduce((s,r)=>s+(r.purchase||0),0);
+      const used=inW+plW; const rawRem=wkCaps[i]-used; const rem=Math.max(0,rawRem); const load=wkCaps[i]>0?used/wkCaps[i]:0;
+      if(used<=0) return;
+      totUsed+=used;
+      const remCell = rawRem<0 ? '<b style="color:#e03131">超额 '+fmt(-rawRem)+'</b>' : '<b>'+fmt(rem)+'</b>';
+      html+='<tr><td style="white-space:nowrap;">'+w.label+'</td><td class="r">'+fmt(inW)+'</td><td class="r">'+fmt(plW)+'</td><td class="r">'+fmt(used)+'</td><td class="r">'+fmt(wkCaps[i])+'</td><td class="r">'+remCell+'</td><td>'+pgCell(load*100)+'</td></tr>';
+    });
+    const totCap=wkCaps.reduce((s,v)=>s+v,0);
+    html+='<tr class="sum-row"><td>合计</td><td class="r">—</td><td class="r">—</td><td class="r">'+fmt(totUsed)+'</td><td class="r">'+fmt(totCap)+'</td><td class="r">'+fmt(Math.max(0,totCap-totUsed))+'</td><td>'+(totCap>0?pgCell(totUsed/totCap*100):'')+'</td></tr>';
+    html+='</tbody></table>';
+    html+='<p style="font-size:14px;color:var(--muted);margin:10px 0 0;">在途数量 = 未收料；周计划数量 = 本周预计交货的周计划；剩余产能 = 周产能 − 已占用。各周产能按最大余数法分配，合计严格等于月产能。</p>';
+  }
+  ov.querySelector('.spu-modal-body').innerHTML=html;
+  ov.querySelector('.spu-modal-title').textContent='周产能占用明细';
+  ov.querySelector('.spu-modal-sub').textContent=escHtml(supShort(supplier))+' · '+(mon&&mon!=='—'?mon:'全部月份');
+  ov.style.display='flex';
+  ov.querySelector('.spu-modal-body').onclick=null;
 }
 
 /* 月度筛选绑定 */

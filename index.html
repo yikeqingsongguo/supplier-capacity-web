@@ -1889,55 +1889,39 @@ function parseDeliv(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\
 function monthOf(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\d{1,2})/); return m?`${parseInt(m[2],10)}月`:''; }
 
 function boot(){ initChartTip(); recompute(); render(); }
-function loadData(){
+function boot(){ initChartTip(); recompute(); render(); }
+function tryCloudUpdate(){
   const $info = document.getElementById('srcInfo');
-  const FALLBACK = (typeof __FALLBACK_DATA__ !== 'undefined' && __FALLBACK_DATA__ && __FALLBACK_DATA__.po && __FALLBACK_DATA__.po.length) ? __FALLBACK_DATA__ : null;
-  let attempts = 0; const MAX_ATTEMPTS = 2; const TIMEOUT_MS = 8000;
-  function useFallback(reason){
-    if(!FALLBACK) return false;
-    DATA = FALLBACK;
-    if(!DATA.meta) DATA.meta = {};
-    if(DATA.meta.saveUrl) try{ localStorage.setItem('zaitu_save_url', DATA.meta.saveUrl); }catch(e){}
-    if($info) $info.textContent = '';
-    showToast('⚠ 云端数据加载失败，已用内置数据（可能非最新）');
-    boot();
-    return true;
-  }
-  function tryLoad(){
-    attempts++;
-    if($info) $info.textContent = '数据加载中…(第'+attempts+'次)';
-    const controller = new AbortController();
-    const timer = setTimeout(function(){ controller.abort(); }, TIMEOUT_MS);
-    fetch('./data.json', { signal: controller.signal })
-      .then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
-      .then(function(raw){
-        try { DATA = JSON.parse(raw); } catch(err){ throw new Error('JSON 解析失败: '+err.message); }
-        if(!DATA.meta) DATA.meta = {};
-        if(DATA.meta.saveUrl) try{ localStorage.setItem('zaitu_save_url', DATA.meta.saveUrl); }catch(e){}
-        if($info) $info.textContent = '';
-        boot();
-      })
-      .catch(function(e){
-        clearTimeout(timer);
-        console.error('[loadData] attempt', attempts, e);
-        if(useFallback(e.message)) return;
-        if(attempts < MAX_ATTEMPTS){ setTimeout(tryLoad, 1200*attempts); }
-        else {
-          if($info){ $info.innerHTML = '<span style="color:#b00;font-weight:bold;">⚠ 数据加载失败</span> <button onclick="loadData()" style="font-size:12px;padding:2px 8px;cursor:pointer;">重试</button><div style="color:#666;font-size:11px;margin-top:4px;">'+e.message+'</div>'; }
-          var banner = document.getElementById('loadErrorBanner');
-          if(!banner){
-            banner = document.createElement('div');
-            banner.id = 'loadErrorBanner';
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff0f0;color:#b00;padding:10px 16px;font-size:13px;text-align:center;border-bottom:1px solid #fcc;';
-            banner.innerHTML = '<b>⚠ 数据加载失败</b> <button onclick="location.reload()" style="padding:2px 10px;cursor:pointer;margin-left:6px;">立即重试</button>';
-            document.body.prepend(banner);
-          } else { banner.style.display = ''; }
+  if($info) $info.textContent = '检查云端更新…';
+  const controller = new AbortController();
+  const timer = setTimeout(function(){ controller.abort(); }, 10000);
+  fetch('./data.json', { signal: controller.signal })
+    .then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(raw){
+      try {
+        var d = JSON.parse(raw);
+        if(d && d.po && d.po.length > (DATA.po||[]).length){
+          DATA = d;
+          if(!DATA.meta) DATA.meta = {};
+          if(DATA.meta.saveUrl) try{ localStorage.setItem('zaitu_save_url', DATA.meta.saveUrl); }catch(e){}
+          recompute(); render();
+          if($info) $info.textContent = '';
+          showToast('✅ 已更新到云端最新数据');
+        } else {
+          if($info) $info.textContent = '';
         }
-      });
-  }
-  tryLoad();
+      } catch(e){ if($info) $info.textContent = ''; }
+    })
+    .catch(function(e){
+      clearTimeout(timer);
+      if($info) $info.textContent = '';
+      /* 静默失败，不影响已显示的内联数据 */
+    });
 }
-loadData();
+/* 页面启动：直接用内联数据渲染，然后后台检查云端是否有更新 */
+boot();
+tryCloudUpdate();
+
 /* parseDeliverDate (needed by renderChart weekly mode; full definition in ext block) */
 function parseDeliverDate(s){
   if(!s) return null;

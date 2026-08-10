@@ -179,7 +179,9 @@ td.num{text-align:right;}
 #tbl th:nth-child(8){width:132px;}
 #tbl th:nth-child(9){width:114px;}
 #tbl th:nth-child(10){width:80px;}
-#tbl td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#tbl th:nth-child(2){min-width:90px;max-width:200px;}
+#tbl td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;}
+#tbl td:nth-child(2){max-width:180px;min-width:60px;}
 #tbl th{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tbl-scroll{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
 .tbl-scroll > table{margin:0;min-width:max-content;}
@@ -808,7 +810,11 @@ const HARDCODED_SHORT = {
   '广州市高端皮具有限公司':'高端',
   '广州市海昊旅行用品有限公司':'海昊',
   '衢州博悦旅游用品有限公司':'博悦',
-  '广州战獒箱包有限公司':'战獒'
+  '广州战獒箱包有限公司':'战獒',
+  '广州新动力皮具有限公司':'新动力',
+  '深圳市全明手袋有限公司':'全明',
+  '广州艾迪比皮具有限公司':'艾迪比',
+  '广州市德之裕皮具有限公司':'德之裕'
 };
 function autoShortName(fullName, existingSet){
   if(!fullName) return '';
@@ -1288,9 +1294,12 @@ function autoSizeColumns(){
   if(!cg) return;
   cg.innerHTML = cols.map((th,i)=>{
     let w;
-    if(i===7) w=132; else if(i===9) w=110; else w=Math.min(320, Math.max(76, Math.round(lens[i]*7.8)+24));
+    if(i===1) w=Math.max(100, Math.min(200, Math.round(lens[i]*7.8)+24)); else if(i===7) w=132; else if(i===9) w=110; else w=Math.min(320, Math.max(76, Math.round(lens[i]*7.8)+24));
     return '<col style="width:'+w+'px">';
   }).join('');
+  /* 二次保护：确保供应商列(index 1)宽度合理 */
+  const protector = cg.querySelectorAll('col');
+  if(protector.length>1){ const c1=protector[1]; if(parseInt(c1.style.width)<80) c1.style.width='100px'; }
 }
 
 /* ---------- 列筛选（每列下拉多选 + 文本搜索，多列 AND，含清空） ---------- */
@@ -2108,7 +2117,28 @@ function runCapCalc(){
   const dFromStr=$('#calcDateFrom').value, dToStr=$('#calcDateTo').value;
   const df=dFromStr?new Date(dFromStr):null, dt=dToStr?new Date(dToStr):null;
   if(df) df.setHours(0,0,0,0); if(dt) dt.setHours(23,59,59,999);
-  const cap = capInput && !isNaN(+capInput) ? Math.max(0, +capInput) : (supName ? capOf(supName) : 0);
+  const monthlyCap = capInput && !isNaN(+capInput) ? Math.max(0, +capInput) : (supName ? capOf(supName) : 0);
+  /* 跨多月时按月累加产能：完整月各贡献 1 个月产能，首尾不满月的按天数比例折算 */
+  let totalCap = monthlyCap;
+  if(df && dt && (dt>df)){
+    const y1=df.getFullYear(), m1=df.getMonth(), d1=df.getDate();
+    const y2=dt.getFullYear(), m2=dt.getMonth(), d2=dt.getDate();
+    function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+    if(y1===y2 && m1===m2){
+      // 同一月：按天数比例
+      const dom=daysInMonth(y1,m1);
+      totalCap = monthlyCap * Math.max(1, (d2-d1+1)/dom);
+    } else {
+      // 跨多月：首月剩余 + 中间整月 + 末月已过
+      const firstFrac = (daysInMonth(y1,m1)-d1+1)/daysInMonth(y1,m1);
+      const lastFrac = d2/daysInMonth(y2,m2);
+      let fullMonths = 0;
+      let cur=new Date(y1,m1+1,1); // 首月下月1号
+      while(cur.getFullYear()<y2 || (cur.getFullYear()===y2 && cur.getMonth()<m2)){ fullMonths++; cur.setMonth(cur.getMonth()+1); }
+      totalCap = monthlyCap * (firstFrac + fullMonths + lastFrac);
+    }
+  }
+  const cap = totalCap;
   const inRecs = DATA.po.filter(r=>{
     if(supName && supName!=='全部' && r.supplier!==supName) return false;
     if(df||dt){ const d=parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }
@@ -2169,7 +2199,26 @@ function runToolCalc(){
   const dFrom=$('#toolDateFrom').value, dTo=$('#toolDateTo').value;
   const df=dFrom?new Date(dFrom):null, dt=dTo?new Date(dTo):null;
   if(df) df.setHours(0,0,0,0); if(dt) dt.setHours(23,59,59,999);
-  const cap = capInput && !isNaN(+capInput) ? Math.max(0,+capInput) : (supName&&supName!=='全部'?capOf(supName):0);
+  const monthlyCap = capInput && !isNaN(+capInput) ? Math.max(0,+capInput) : (supName&&supName!=='全部'?capOf(supName):0);
+  /* 跨多月时按月累加产能：完整月各贡献 1 个月产能，首尾不满月的按天数比例折算 */
+  let totalCap = monthlyCap;
+  if(df && dt && (dt>df)){
+    const y1=df.getFullYear(), m1=df.getMonth(), d1=df.getDate();
+    const y2=dt.getFullYear(), m2=dt.getMonth(), d2=dt.getDate();
+    function tDaysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+    if(y1===y2 && m1===m2){
+      const dom=tDaysInMonth(y1,m1);
+      totalCap = monthlyCap * Math.max(1, (d2-d1+1)/dom);
+    } else {
+      const firstFrac = (tDaysInMonth(y1,m1)-d1+1)/tDaysInMonth(y1,m1);
+      const lastFrac = d2/tDaysInMonth(y2,m2);
+      let fullMonths = 0;
+      let cur=new Date(y1,m1+1,1);
+      while(cur.getFullYear()<y2 || (cur.getFullYear()===y2 && cur.getMonth()<m2)){ fullMonths++; cur.setMonth(cur.getMonth()+1); }
+      totalCap = monthlyCap * (firstFrac + fullMonths + lastFrac);
+    }
+  }
+  const cap = totalCap;
   const inRecs = DATA.po.filter(r=>{
     if(supName&&supName!=='全部'&&r.supplier!==supName) return false;
     if(df||dt){ const d=parseDeliverDate(r.deliveryDate); if(!d) return false; if(df&&d<df) return false; if(dt&&d>dt) return false; }

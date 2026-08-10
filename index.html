@@ -1844,10 +1844,16 @@ bindImport('impCap','fileCap','cap');
 
 /* 发布到云端：把当前内存 DATA 写回 GitHub（经 Netlify Function 代理，免密码信任所有人） */
 const NETLIFY_SAVE_URL = '';  /* 部署 Netlify Function 后回填其 URL；或改用 data.json 的 meta.saveUrl */
+function resolveSaveUrl(){
+  let u = (DATA && DATA.meta && DATA.meta.saveUrl) || NETLIFY_SAVE_URL;
+  if(!u){ try{ u = localStorage.getItem('zaitu_save_url') || ''; }catch(e){} }
+  return u;
+}
 function publish(){
   if(!DATA){ showToast('数据尚未加载'); return; }
-  const url = (DATA.meta && DATA.meta.saveUrl) || NETLIFY_SAVE_URL;
+  const url = resolveSaveUrl();
   if(!url){ showToast('未配置发布地址，请联系管理员'); return; }
+  try{ localStorage.setItem('zaitu_save_url', url); }catch(e){}  /* 导入新数据也不丢保存地址 */
   showToast('☁ 发布中…');
   fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(DATA) })
     .then(r=>r.json().catch(()=>({ok:false})))
@@ -1884,16 +1890,61 @@ function monthOf(s){ if(!s) return ''; const m=String(s).match(/(\d{4})[/-](\d{1
 
 function boot(){ initChartTip(); recompute(); render(); }
 function loadData(){
-  fetch('./data.json')
-    .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(d=>{ DATA=d; if(!DATA.meta) DATA.meta={}; boot(); })
-    .catch(e=>{
-      const m=document.createElement('div');
-      m.style.cssText='padding:40px;color:#b00;font-size:14px';
-      m.textContent='数据加载失败：'+e.message+'。请确认通过 https 链接访问，或重新部署 data.json。';
-      document.body.insertBefore(m, document.body.firstChild);
-      console.error(e);
-    });
+  const $info = document.getElementById('srcInfo');
+  let attempts = 0;
+  const MAX_ATTEMPTS = 3;
+  const TIMEOUT_MS = 20000;
+
+  function tryLoad(){
+    attempts++;
+    if($info) $info.textContent = '数据加载中…(第'+attempts+'次)';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    fetch('./data.json', { signal: controller.signal })
+      .then(r => {
+        clearTimeout(timer);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text(); /* 先拿文本，方便诊断截断 */
+      })
+      .then(raw => {
+        try { DATA = JSON.parse(raw); } catch (parseErr) {
+          throw new Error('JSON 解析失败（文件可能不完整，'+raw.length+'字节）: ' + parseErr.message);
+        }
+        if (!DATA.meta) DATA.meta = {};
+        if (DATA.meta.saveUrl) try { localStorage.setItem('zaitu_save_url', DATA.meta.saveUrl); } catch (e) {}
+        if ($info) $info.textContent = '';
+        boot();
+      })
+      .catch(e => {
+        clearTimeout(timer);
+        console.error('[loadData] attempt', attempts, e);
+        if (attempts < MAX_ATTEMPTS) {
+          setTimeout(tryLoad, 1500 * attempts); /* 递增延迟重试 */
+        } else {
+          /* 最终失败：显示明确错误 + 重试按钮 */
+          if ($info) {
+            $info.innerHTML = '<span style="color:#b00;font-weight:bold;">⚠ 数据加载失败</span> '
+              + '<button id="btnRetryLoad" style="font-size:12px;padding:2px 8px;cursor:pointer;border:1px solid #ccc;background:#fff;border-radius:3px;margin-left:4px;" onclick="loadData()">重试</button>'
+              + '<div style="color:#666;font-size:11px;margin-top:4px;">' + e.message + '</div>';
+          }
+          /* 同时在页面顶部显示醒目提示 */
+          var banner = document.getElementById('loadErrorBanner');
+          if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'loadErrorBanner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff0f0;color:#b00;padding:10px 16px;font-size:13px;text-align:center;border-bottom:1px solid #fcc;';
+            banner.innerHTML = '<b>⚠ 数据加载失败</b> — 请检查网络连接后点击「重试」按钮。如持续失败，可能是 GitHub Pages 在当前网络不稳定。'
+              + ' <button onclick="loadData();this.parentElement.style.display=\'none\';" style="padding:2px 10px;cursor:pointer;">立即重试</button>';
+            document.body.prepend(banner);
+          } else {
+            banner.style.display = '';
+          }
+        }
+      });
+  }
+
+  tryLoad();
 }
 loadData();
 

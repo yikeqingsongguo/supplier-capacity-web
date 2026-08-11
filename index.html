@@ -376,6 +376,7 @@ a.spu-count:hover, a.wk-spu-link:hover, a.wk-cap-link:hover, a.spu-link:hover, a
       <div class="nav">
         <button class="navbtn" id="navLine" type="button">🏗️ 产线分析</button>
         <button class="navbtn" id="navTime" type="button">⏱️ 时效分析</button>
+        <button class="navbtn" id="navOverdue" type="button">🚨 逾期分析</button>
       </div>
     </div>
     <div class="nav-group">
@@ -699,6 +700,49 @@ a.spu-count:hover, a.wk-spu-link:hover, a.wk-cap-link:hover, a.spu-link:hover, a
     <div class="card card-full" style="margin-top:16px;" id="tmCatCard"><h3>时效分类数据 <span class="hint">按时效标签归并：爆款新品 / 新品 / 首次返单 / 自备货 / 新变体 / 其它</span></h3><div id="tmCatData"></div></div>
   </section>
 
+  <!-- 逾期分析 -->
+  <section class="main" id="pageOverdue" hidden>
+    <div class="topbar">
+      <div class="crumb">逾期分析</div>
+      <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="odSup" class="btn" style="padding:6px 10px;"></select>
+        <button id="odReset" class="btn" style="padding:6px 10px;">重置</button>
+      </div>
+    </div>
+    <div class="note" id="odNote"></div>
+    <div class="kpis" id="odKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;"></div>
+    <div class="card" style="margin-top:16px;">
+      <h3>各供应商逾期汇总 <span class="hint">点击行展开逾期订单明细</span></h3>
+      <div class="tbl-scroll" style="max-height:calc(100vh - 340px);">
+        <table id="odTbl">
+          <thead><tr>
+            <th>供应商</th>
+            <th class="num">逾期订单数</th>
+            <th class="num">逾期数量（剩余收料）</th>
+            <th class="num">采购数量</th>
+            <th class="num">最大逾期天数</th>
+            <th class="num">最小天数</th>
+            <th class="num">平均天数</th>
+            <th class="num">操作</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card card-full" style="margin-top:16px;display:none;" id="odDetailCard">
+      <h3 id="odDetailTitle"></h3>
+      <div class="tbl-scroll" style="max-height:calc(100vh - 300px);">
+        <table id="odDetailTbl">
+          <thead><tr>
+            <th>采购订单号</th><th>SPU</th><th>物料名称</th><th>交货日期</th>
+            <th class="num">逾期天数</th><th class="num">剩余收料</th><th class="num">采购数量</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="main" id="pageTool" hidden>
     <div class="topbar">
       <div class="crumb">工具 · 预估产能计算</div>
@@ -778,7 +822,7 @@ const $$ = s => document.querySelectorAll(s);
 const fmt = n => Math.round(n||0).toLocaleString('zh-CN');
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const DEFCAP = DATA.meta.defCap || 15000;
-let state = { supplier:null, month:null, timeTag:null, lineTag:null };
+let state = { supplier:null, month:null, timeTag:null, lineTag:null, odSup:null };
 
 /* ---------- 预计算索引 ---------- */
 let capMap = new Map();
@@ -1740,6 +1784,7 @@ function render(){
   else if(currentPage==='monthly') renderMonthlyData();
   else if(currentPage==='line') renderLineView();
   else if(currentPage==='time') renderTimeView();
+  else if(currentPage==='overdue') renderOverdueView();
   else if(currentPage==='tool') renderTool();
   else if(currentPage==='spu') renderSpu();
 }
@@ -2395,8 +2440,8 @@ function parseWeeklyXLSX(file){
 }
 
 /* ---------- 导航调度（7 页） ---------- */
-const _NAV={total:'navTotal',weekly:'navWeekly',supplier:'navSupplier',monthly:'navMonthly',newProduct:'navNewProduct',line:'navLine',time:'navTime',tool:'navTool',spu:'navSpu'};
-const _PAGE={total:'pageTotal',weekly:'pageWeekly',supplier:'pageSupplier',monthly:'pageMonthly',newProduct:'pageNewProduct',line:'pageLine',time:'pageTime',tool:'pageTool',spu:'pageSpu'};
+const _NAV={total:'navTotal',weekly:'navWeekly',supplier:'navSupplier',monthly:'navMonthly',newProduct:'navNewProduct',line:'navLine',time:'navTime',overdue:'navOverdue',tool:'navTool',spu:'navSpu'};
+const _PAGE={total:'pageTotal',weekly:'pageWeekly',supplier:'pageSupplier',monthly:'pageMonthly',newProduct:'pageNewProduct',line:'pageLine',time:'pageTime',overdue:'pageOverdue',tool:'pageTool',spu:'pageSpu'};
 goPage = function(p){
   currentPage=p;
   showDetail=false;
@@ -2639,6 +2684,80 @@ function renderTimeView(){
   renderTimeProgress(map, state.timeTag);
   if(pillsBox) pillsBox.onclick = e=>{ const c=e.target.closest('.chip'); if(!c) return; state.timeTag = c.dataset.tag; renderTimeView(); };
   renderTimeCatData();
+}
+
+/* ---------- 逾期分析 ---------- */
+function renderOverdueView(){
+  fillSupSel($('#odSup'), state.odSup);
+  const sv = state.odSup || '全部';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  const list = DATA.po.filter(r=>{
+    if(sv!=='全部' && r.supplier!==sv) return false;
+    const d = parseDeliverDate(r.deliveryDate);
+    if(!d) return false;
+    return d < today && (r.remaining||0) > 0;
+  });
+  const map = new Map();
+  list.forEach(r=>{
+    const d = parseDeliverDate(r.deliveryDate);
+    const days = Math.round((today - d)/86400000);
+    if(!map.has(r.supplier)) map.set(r.supplier, {sup:r.supplier, cnt:0, qty:0, pur:0, maxd:0, mind:999, rows:[]});
+    const a = map.get(r.supplier);
+    a.cnt++; a.qty += (r.remaining||0); a.pur += (r.purchase||0);
+    a.maxd = Math.max(a.maxd, days); a.mind = Math.min(a.mind, days);
+    a.rows.push({poNo:r.poNo, spu:r.spu, name:r.materialName, dd:r.deliveryDate, days, rem:r.remaining, pur:r.purchase});
+  });
+  const arr = [...map.values()].sort((a,b)=>b.qty-a.qty);
+  const totCnt = arr.reduce((s,a)=>s+a.cnt,0);
+  const totQty = arr.reduce((s,a)=>s+a.qty,0);
+  const totPur = arr.reduce((s,a)=>s+a.pur,0);
+  const maxDays = arr.length?Math.max.apply(null, arr.map(a=>a.maxd)):0;
+  const allDays = arr.reduce((s,a)=>s.concat(a.rows.map(r=>r.days)), []);
+  const avgDays = allDays.length? allDays.reduce((s,d)=>s+d,0)/allDays.length : 0;
+  const kpi = (l,v,c)=>'<div class="kpi"><div class="l">'+l+'</div><div class="v '+(c||'')+'">'+v+'</div></div>';
+  $('#odKpis').innerHTML = kpi('逾期供应商', arr.length+' 家','blue')
+    + kpi('逾期订单数', fmt(totCnt))
+    + kpi('逾期数量（剩余收料）', fmt(totQty),'red')
+    + kpi('逾期采购总量', fmt(totPur))
+    + kpi('最大逾期天数', maxDays+' 天','amber')
+    + kpi('平均逾期天数', avgDays.toFixed(1)+' 天');
+  const tb = $('#odTbl tbody');
+  if(tb){
+    if(!arr.length){ tb.innerHTML='<tr><td colspan="8" class="empty">无逾期数据（当前筛选条件下没有到期未交完的订单）</td></tr>'; }
+    else {
+      tb.innerHTML = arr.map((a,i)=>{
+        const avg = a.rows.length? a.rows.reduce((s,r)=>s+r.days,0)/a.rows.length : 0;
+        const col = a.maxd>=30?'var(--red)':a.maxd>=14?'var(--amber)':'var(--ink)';
+        return '<tr class="clickable" data-i="'+i+'"><td>'+supShort(a.sup)+'</td>'
+          + '<td class="num">'+a.cnt+'</td>'
+          + '<td class="num" style="font-weight:600;color:var(--red);">'+fmt(a.qty)+'</td>'
+          + '<td class="num" style="color:var(--muted);">'+fmt(a.pur)+'</td>'
+          + '<td class="num" style="color:'+col+';font-weight:600;">'+a.maxd+'</td>'
+          + '<td class="num">'+a.mind+'</td>'
+          + '<td class="num">'+avg.toFixed(1)+'</td>'
+          + '<td class="num" style="color:var(--primary);">▸ 明细</td></tr>';
+      }).join('');
+    }
+  }
+  $('#odNote').innerHTML = '逾期定义：交货日期 &lt; 今天（'+todayStr+'）且 剩余收料 &gt; 0（即"到期未交完"）。共 <b>'+arr.length+'</b> 家供应商、<b>'+totCnt+'</b> 条订单逾期。'+(sv!=='全部'?'（已筛选：'+supShort(sv)+'）':'');
+  $('#odTbl tbody').onclick = e=>{
+    const tr=e.target.closest('tr[data-i]'); if(!tr) return;
+    const i=+tr.dataset.i; const a=arr[i];
+    $('#odDetailTitle').textContent = supShort(a.sup) + ' · 逾期订单明细（'+a.cnt+' 条，逾期数量 '+fmt(a.qty)+'）';
+    const rows = a.rows.slice().sort((x,y)=>y.days-x.days).map(r=>{
+      const col = r.days>=30?'var(--red)':r.days>=14?'var(--amber)':'var(--ink)';
+      return '<tr><td>'+escHtml(r.poNo)+'</td><td>'+escHtml(r.spu)+'</td><td>'+escHtml(r.name)+'</td><td>'+escHtml(r.dd)+'</td>'
+        + '<td class="num" style="color:'+col+';font-weight:600;">'+r.days+'</td>'
+        + '<td class="num" style="color:var(--red);font-weight:600;">'+fmt(r.rem)+'</td>'
+        + '<td class="num" style="color:var(--muted);">'+fmt(r.pur)+'</td></tr>';
+    }).join('');
+    $('#odDetailTbl tbody').innerHTML = rows;
+    $('#odDetailCard').style.display='';
+    $('#odDetailCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+  const sel=$('#odSup'); if(sel && !sel.dataset.bound){ sel.addEventListener('change', ()=>{ state.odSup = sel.value==='全部'?null:sel.value; renderOverdueView(); }); sel.dataset.bound='1'; }
+  const rst=$('#odReset'); if(rst && !rst.dataset.bound){ rst.addEventListener('click', ()=>{ state.odSup=null; if($('#odSup')) $('#odSup').value='全部'; $('#odDetailCard').style.display='none'; renderOverdueView(); }); rst.dataset.bound='1'; }
 }
 
 function renderTimeProgress(map, tag){

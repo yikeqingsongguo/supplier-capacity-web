@@ -117,7 +117,7 @@ table.mini tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
 .cap-overload-table td:first-child{text-align:left;}
 .cap-overload-more{font-size:14px;color:var(--muted);text-align:center;}
 /* 弹窗 */
-.cap-modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
+.cap-modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1100;align-items:center;justify-content:center;}
 .cap-modal-mask.open{display:flex;}
 .cap-modal{background:#fff;border-radius:10px;width:780px;max-height:630px;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.15);}
 .cap-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:0.5px solid var(--line);}
@@ -213,7 +213,7 @@ td.num{text-align:right;}
 .tag.over{background:var(--red-soft);color:var(--red);}
 .tag.wait{background:var(--amber-soft);color:var(--amber);border:1px solid #E5DCC8;}
 .clickable{cursor:pointer;}
-.spu-modal{position:fixed;inset:0;background:rgba(44,44,44,.35);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.spu-modal{position:fixed;inset:0;background:rgba(44,44,44,.35);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
 .spu-modal-card{background:var(--panel);border-radius:14px;box-shadow:0 16px 48px rgba(44,44,44,.12);width:min(1080px,94vw);max-height:90vh;display:flex;flex-direction:column;padding:36px 38px;border:1px solid var(--line);}
 .spu-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px;}
 .spu-modal-title{font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
@@ -345,6 +345,22 @@ a.spu-count:hover, a.wk-spu-link:hover, a.wk-cap-link:hover, a.spu-link:hover, a
 .fp-apply{ background:var(--ink); color:#FAFAF7; border-color:var(--ink); }
 .btn-sm{font-size:14px; cursor:pointer; margin-left:8px; color:var(--ink);letter-spacing:.01em; }
 .btn-sm:hover{ background:var(--primary-soft); border-color:var(--primary); color:var(--primary); }
+
+/* 全屏放大 / 退出全屏 */
+.fs-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:all .15s;padding:0;margin:0;box-sizing:border-box;}
+.fs-btn:hover{color:var(--primary);border-color:var(--primary);background:var(--primary-soft);}
+.fs-btn svg{width:16px;height:16px;display:block;pointer-events:none;}
+.fs-btn .ic-collapse{display:none;}
+.fs-btn.is-fs .ic-expand{display:none;}
+.fs-btn.is-fs .ic-collapse{display:inline;}
+.cap-modal-act{display:inline-flex;align-items:center;gap:8px;}
+/* 最大化态（层级：视图页 800 < 看板卡片 850 < 弹窗 1000/1100 < 弹窗内卡片 1500） */
+.fs-max{position:fixed!important;z-index:850!important;background:var(--panel);border-radius:0!important;margin:0!important;box-shadow:0 20px 60px rgba(0,0,0,.25)!important;overflow:auto!important;}
+section.main.fs-max{z-index:800!important;background:var(--bg);top:0;left:0;right:0;bottom:0;width:auto;height:auto;}
+.card.fs-max,.tcard.fs-max{top:0;left:0;right:0;bottom:0;width:auto;height:auto;border:1px solid var(--line);}
+.card.fs-max .tbl-scroll,.tcard.fs-max .tbl-scroll{max-height:calc(100vh - 130px)!important;}
+.spu-modal-card.fs-max{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;border-radius:0!important;z-index:1500!important;padding:24px 28px!important;box-shadow:none!important;}
+.cap-modal.fs-max{position:fixed!important;inset:0!important;width:100vw!important;max-height:none!important;border-radius:0!important;z-index:1500!important;box-shadow:none!important;}
 </style>
 <script>
 /* SheetJS xlsx@0.18.5 inlined for offline import -- no external CDN dependency */
@@ -1739,11 +1755,13 @@ function ensureCapModal(){
   var mask = document.createElement('div');
   mask.id = 'capModalMask';
   mask.className = 'cap-modal-mask';
-  mask.innerHTML = '<div class="cap-modal"><div class="cap-modal-head"><h3 id="capModalTitle"></h3><button class="cap-modal-close" id="capModalClose">&times;</button></div>'
+  mask.innerHTML = '<div class="cap-modal"><div class="cap-modal-head"><h3 id="capModalTitle"></h3><span class="cap-modal-act" id="capModalAct"><button class="cap-modal-close" id="capModalClose" type="button">&times;</button></span></div>'
     + '<div class="cap-modal-body" id="capModalBody"></div></div>';
   document.body.appendChild(mask);
-  $('#capModalClose').addEventListener('click', function(){ $('#capModalMask').classList.remove('open'); });
-  $('#capModalMask').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+  var capCard = mask.querySelector('.cap-modal');
+  if(window.__makeFsBtn){ mask.querySelector('#capModalAct').appendChild(window.__makeFsBtn(capCard)); }
+  $('#capModalClose').addEventListener('click', function(){ $('#capModalMask').classList.remove('open'); capCard.classList.remove('fs-max'); var b=capCard.querySelector('.fs-btn'); if(b) b.classList.remove('is-fs'); });
+  $('#capModalMask').addEventListener('click', function(e){ if(e.target===this){ this.classList.remove('open'); capCard.classList.remove('fs-max'); var b=capCard.querySelector('.fs-btn'); if(b) b.classList.remove('is-fs'); } });
 }
 
 /* 打开档位详情弹窗 */
@@ -3386,6 +3404,100 @@ if($('#fileWeekly')) $('#fileWeekly').addEventListener('change', e=>{ const f=e.
 if($('#impNewProduct')) $('#impNewProduct').addEventListener('click', ()=>{ ensureXLSX().then(()=>{ $('#fileNewProduct').click(); }).catch(err=>showToast(err.message)); });
 if($('#fileNewProduct')) $('#fileNewProduct').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; showToast('新品排期功能开发中：已选择 '+f.name+'，解析逻辑待实现。'); e.target.value=''; });
 
+</script>
+<script>
+/* 全屏放大 / 退出全屏：看板卡片、视图页、弹窗小窗通用 */
+(function(){
+  var ICON_EXPAND = '<svg class="ic-expand" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>';
+  var ICON_COLLAPSE = '<svg class="ic-collapse" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4"/><path d="M15 4v5h5"/><path d="M9 20v-5H4"/><path d="M15 20v-5h5"/></svg>';
+
+  function makeFsBtn(host){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'fs-btn';
+    btn.setAttribute('title','放大至全屏');
+    btn.setAttribute('aria-label','放大至全屏');
+    btn.innerHTML = ICON_EXPAND + ICON_COLLAPSE;
+    btn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      var on = host.classList.toggle('fs-max');
+      btn.classList.toggle('is-fs', on);
+      btn.setAttribute('title', on ? '退出全屏' : '放大至全屏');
+      btn.setAttribute('aria-label', on ? '退出全屏' : '放大至全屏');
+    });
+    return btn;
+  }
+  window.__makeFsBtn = makeFsBtn;
+
+  function exitFs(host){
+    host.classList.remove('fs-max');
+    var b = host.querySelector('.fs-btn'); if(b) b.classList.remove('is-fs');
+  }
+
+  function injectCardFs(card){
+    var btn = makeFsBtn(card);
+    var h3 = card.querySelector(':scope > h3');
+    if(h3){
+      var left = document.createElement('span');
+      left.style.cssText = 'display:inline-flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;';
+      while(h3.firstChild) left.appendChild(h3.firstChild);
+      h3.appendChild(left);
+      h3.appendChild(btn);
+      h3.style.display='flex'; h3.style.justifyContent='space-between'; h3.style.alignItems='center'; h3.style.gap='10px';
+    } else {
+      var header = card.firstElementChild;
+      if(!header){ card.appendChild(btn); return; }
+      var right = header.lastElementChild;
+      if(right && (right.style.display==='flex' || (right.style.cssText && /flex/.test(right.style.cssText)))){
+        right.appendChild(btn);
+      } else {
+        var grp = document.createElement('span');
+        grp.style.cssText='display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto;';
+        grp.appendChild(btn); header.appendChild(grp);
+      }
+    }
+  }
+
+  function injectTopbarFs(topbar){
+    var host = topbar.closest('.main') || topbar.parentElement;
+    var btn = makeFsBtn(host);
+    var imp = topbar.querySelector('.imp');
+    if(imp) imp.appendChild(btn); else topbar.appendChild(btn);
+  }
+
+  function injectModalHeadFs(modal){
+    var card = modal.querySelector('.spu-modal-card'); if(!card) return;
+    var head = card.querySelector('.spu-modal-head'); if(!head) return;
+    var btn = makeFsBtn(card);
+    var right = document.createElement('span');
+    right.style.cssText='display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;';
+    right.appendChild(btn);
+    var close = head.querySelector('.fp-x');
+    if(close){ head.removeChild(close); right.appendChild(close);
+      close.addEventListener('click', function(){ card.classList.remove('fs-max'); btn.classList.remove('is-fs'); });
+    }
+    head.appendChild(right);
+    modal.addEventListener('click', function(e){ if(e.target===modal){ card.classList.remove('fs-max'); btn.classList.remove('is-fs'); } });
+  }
+
+  /* 看板卡片（排除弹窗内可能存在的卡片） */
+  document.querySelectorAll('.card:not(.spu-modal .card), .tcard:not(.spu-modal .tcard)').forEach(injectCardFs);
+  /* 每个视图页 topbar */
+  document.querySelectorAll('.topbar').forEach(injectTopbarFs);
+  /* 弹窗小窗 */
+  ['spuModal','tagModal'].forEach(function(id){ var m=document.getElementById(id); if(m) injectModalHeadFs(m); });
+  /* 动态 capModal 可能在 boot 时已创建（早于本注入脚本），补挂按钮 */
+  var capMask = document.getElementById('capModalMask');
+  if(capMask){
+    var capAct = capMask.querySelector('#capModalAct');
+    if(capAct && !capAct.querySelector('.fs-btn')){ capAct.appendChild(makeFsBtn(capMask.querySelector('.cap-modal'))); }
+  }
+
+  /* ESC 退出所有全屏 */
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){ document.querySelectorAll('.fs-max').forEach(exitFs); }
+  });
+})();
 </script>
 </body>
 </html>

@@ -2708,7 +2708,21 @@ function renderOverdueView(){
     a.maxd = Math.max(a.maxd, days); a.mind = Math.min(a.mind, days);
     a.rows.push({poNo:r.poNo, spu:r.spu, name:r.materialName, dd:r.deliveryDate, days, rem:r.remaining, pur:r.purchase});
   });
-  const arr = [...map.values()].sort((a,b)=>b.qty-a.qty);
+  let arr = [...map.values()];
+  arr.forEach(a=>{
+    const agg = new Map();
+    a.rows.forEach(r=>{
+      const k = r.poNo + String.fromCharCode(1) + r.spu;
+      if(!agg.has(k)) agg.set(k, {poNo:r.poNo, spu:r.spu, name:r.name, dd:r.dd, days:r.days, rem:r.rem, pur:r.pur});
+      else { const x=agg.get(k); x.rem+=r.rem; x.pur+=r.pur; if(r.days>x.days) x.days=r.days; if(!x.name) x.name=r.name; if(!x.dd) x.dd=r.dd; }
+    });
+    const rows=[...agg.values()];
+    a.cnt = rows.length;
+    a.qty = rows.reduce((s,r)=>s+r.rem,0);
+    a.pur = rows.reduce((s,r)=>s+r.pur,0);
+    a.rows = rows;
+  });
+  arr.sort((a,b)=>b.qty-a.qty);
   const totCnt = arr.reduce((s,a)=>s+a.cnt,0);
   const totQty = arr.reduce((s,a)=>s+a.qty,0);
   const totPur = arr.reduce((s,a)=>s+a.pur,0);
@@ -2743,21 +2757,35 @@ function renderOverdueView(){
   $('#odNote').innerHTML = '逾期定义：交货日期 &lt; 今天（'+todayStr+'）且 剩余收料 &gt; 0（即"到期未交完"）。共 <b>'+arr.length+'</b> 家供应商、<b>'+totCnt+'</b> 条订单逾期。'+(sv!=='全部'?'（已筛选：'+supShort(sv)+'）':'');
   $('#odTbl tbody').onclick = e=>{
     const tr=e.target.closest('tr[data-i]'); if(!tr) return;
+    const next = tr.nextElementSibling;
+    if(next && next.classList.contains('od-detail-row')){ next.remove(); return; }
+    document.querySelectorAll('#odTbl .od-detail-row').forEach(r=>r.remove());
     const i=+tr.dataset.i; const a=arr[i];
-    $('#odDetailTitle').textContent = supShort(a.sup) + ' · 逾期订单明细（'+a.cnt+' 条，逾期数量 '+fmt(a.qty)+'）';
-    const rows = a.rows.slice().sort((x,y)=>y.days-x.days).map(r=>{
+    const detailRows = a.rows.slice().sort((x,y)=>y.days-x.days).map(r=>{
       const col = r.days>=30?'var(--red)':r.days>=14?'var(--amber)':'var(--ink)';
       return '<tr><td>'+escHtml(r.poNo)+'</td><td>'+escHtml(r.spu)+'</td><td>'+escHtml(r.name)+'</td><td>'+escHtml(r.dd)+'</td>'
         + '<td class="num" style="color:'+col+';font-weight:600;">'+r.days+'</td>'
         + '<td class="num" style="color:var(--red);font-weight:600;">'+fmt(r.rem)+'</td>'
         + '<td class="num" style="color:var(--muted);">'+fmt(r.pur)+'</td></tr>';
     }).join('');
-    $('#odDetailTbl tbody').innerHTML = rows;
-    $('#odDetailCard').style.display='';
-    $('#odDetailCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'od-detail-row';
+    detailTr.innerHTML = '<td colspan="8"><div style="padding:10px 14px;background:#fafaf7;border:1px solid #eee;border-radius:8px;margin:2px 0;">'
+      + '<div style="font-size:13px;color:var(--primary);font-weight:600;margin-bottom:8px;">'+supShort(a.sup)+' · 逾期明细（'+a.cnt+' 条，逾期数量 '+fmt(a.qty)+'）</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>'
+      + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">采购订单号</th>'
+      + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">SPU</th>'
+      + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">物料名称</th>'
+      + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">交货日期</th>'
+      + '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">逾期天数</th>'
+      + '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">剩余收料</th>'
+      + '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid #eee;color:#555;">采购数量</th>'
+      + '</tr></thead><tbody>'+detailRows+'</tbody></table>'
+      + '</div></td>';
+    tr.after(detailTr);
   };
   const sel=$('#odSup'); if(sel && !sel.dataset.bound){ sel.addEventListener('change', ()=>{ state.odSup = sel.value==='全部'?null:sel.value; renderOverdueView(); }); sel.dataset.bound='1'; }
-  const rst=$('#odReset'); if(rst && !rst.dataset.bound){ rst.addEventListener('click', ()=>{ state.odSup=null; if($('#odSup')) $('#odSup').value='全部'; $('#odDetailCard').style.display='none'; renderOverdueView(); }); rst.dataset.bound='1'; }
+  const rst=$('#odReset'); if(rst && !rst.dataset.bound){ rst.addEventListener('click', ()=>{ state.odSup=null; if($('#odSup')) $('#odSup').value='全部'; document.querySelectorAll('#odTbl .od-detail-row').forEach(r=>r.remove()); renderOverdueView(); }); rst.dataset.bound='1'; }
 }
 
 function renderTimeProgress(map, tag){
@@ -2925,7 +2953,7 @@ function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none
 
 /* ---------- 事件绑定 ---------- */
 /* 导航 id → 页面 key 显式映射（避免 navNewProduct 经 replace+toLowerCase 变成 'newproduct' 而匹配不到 'newProduct'） */
-const _NAV2PAGE={'navWeekly':'weekly','navSupplier':'supplier','navMonthly':'monthly','navNewProduct':'newProduct','navLine':'line','navTime':'time','navTool':'tool','navSpu':'spu'};
+const _NAV2PAGE={'navWeekly':'weekly','navSupplier':'supplier','navMonthly':'monthly','navNewProduct':'newProduct','navLine':'line','navTime':'time','navOverdue':'overdue','navTool':'tool','navSpu':'spu'};
 Object.keys(_NAV2PAGE).forEach(id=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>goPage(_NAV2PAGE[id])); });
 
 function initCollapse(){

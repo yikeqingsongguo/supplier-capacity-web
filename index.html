@@ -876,9 +876,9 @@ const fmt = n => Math.round(n||0).toLocaleString('zh-CN');
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const DEFCAP = DATA.meta.defCap || 15000;
 let state = { supplier:null, month:null, timeTag:null, lineTag:null, odSup:null };
-const CORE_DEF = ['广州市忆恩皮具有限公司','广州市佳俊皮具有限公司','广州同光皮具有限公司','广州市拿可箱包有限公司','广州市旺达皮具有限公司','广州市宝莎皮具有限公司','广州市贝瑞卡皮具有限公司','道县浩川皮具有限公司','广州骏航皮具有限责任公司','广州思哲箱包有限公司'];
+const CORE_DEF = ['广州市忆恩皮具有限公司','广州市佳俊皮具制品有限公司','广州同光皮具制品有限公司','广州市拿可箱包有限公司','广州市旺达皮具有限公司','广州市宝莎皮具有限公司','广州市贝瑞卡皮具有限公司','道县浩川皮具有限公司','广州骏航皮具有限责任公司','广州思哲箱包有限公司'];
 const CORE_KEY = 'zaitu_core_suppliers';
-function loadCoreList(){ try{ const s=localStorage.getItem(CORE_KEY); if(s){ const a=JSON.parse(s); if(Array.isArray(a)&&a.length) return a; } }catch(e){} return CORE_DEF.slice(); }
+function loadCoreList(){ try{ const s=localStorage.getItem(CORE_KEY); if(s){ const a=JSON.parse(s); if(Array.isArray(a)&&a.length){ const supSet=new Set((DATA.po||[]).map(r=>r.supplier)); if(a.some(n=>supSet.has(n))) return a; } } }catch(e){} return CORE_DEF.slice(); }
 let coreList = loadCoreList();
 
 /* ---------- 预计算索引 ---------- */

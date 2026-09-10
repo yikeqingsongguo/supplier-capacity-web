@@ -18,7 +18,7 @@ from datetime import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ORDER_XLSX = os.path.join(ROOT, 'data', '采购订单.xlsx')
-CAP_XLSX   = os.path.join(ROOT, '产能.xlsx')
+CAP_XLSX   = os.path.join(ROOT, 'data', '产能.xlsx')
 OUT        = os.path.join(ROOT, 'data.json')
 DEFCAP = 15000
 

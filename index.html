@@ -2018,9 +2018,19 @@ function tryCloudUpdate(){
     .then(function(raw){
       try {
         var d = JSON.parse(raw);
-        if(d && d.po && d.po.length > (DATA.po||[]).length){
-          DATA = d;
-          if(!DATA.meta) DATA.meta = {};
+        var inlineGen = DATA.meta && DATA.meta.generatedAt;
+        // 仅当云端 data.json 比内联数据更新（或内联无时间戳）时合并；
+        // 采用「原地合并」而非 DATA=d，保留核心组筛选访问器(_poRaw/_wkRaw)与 DATA 引用，避免周更后核心筛选失效
+        if(d && d.po && d.po.length && d.meta && d.meta.generatedAt
+           && (!inlineGen || d.meta.generatedAt > inlineGen)){
+          _poRaw = d.po;
+          _wkRaw = (d.weekly && d.weekly.length) ? d.weekly : _wkRaw;
+          DATA.meta = d.meta || DATA.meta;
+          DATA.capacity = d.capacity || DATA.capacity;
+          DATA.suppliers = d.suppliers || DATA.suppliers;
+          DATA.months = d.months || DATA.months;
+          suppliersFull = DATA.suppliers;
+          suppliers = coreGroupOn ? suppliersFull.filter(function(s){return coreList.indexOf(s.name)>=0;}) : suppliersFull;
           if(DATA.meta.saveUrl) try{ localStorage.setItem('zaitu_save_url', DATA.meta.saveUrl); }catch(e){}
           recompute(); render();
           if($info) $info.textContent = '';

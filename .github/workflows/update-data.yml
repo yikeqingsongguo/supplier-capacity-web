@@ -1,0 +1,47 @@
+name: 更新在途数据 data.json
+
+on:
+  schedule:
+    # 每天 01:00 UTC = 北京时间 每天 09:00 自动跑一次
+    - cron: '0 1 * * *'
+  # 手动触发（Actions 页面 → Run workflow）
+  workflow_dispatch:
+  # 你更新了 data/ 下的 Excel 时自动重算
+  push:
+    paths:
+      - 'data/**'
+
+permissions:
+  contents: write   # 仅允许本 Action 提交 data.json，令牌为内置 GITHUB_TOKEN，绝不暴露给浏览器
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: pip install openpyxl
+
+      - name: 生成 data.json
+        run: python gen_data_json.py
+
+      - name: 提交 data.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          if git diff --cached --quiet; then
+            echo "data.json 无变化，跳过提交"
+          else
+            git commit -m "chore: 自动更新 data.json（$(date +%Y-%m-%d)）"
+            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main
+          fi

@@ -2,7 +2,7 @@
 """在途数据看板 · 定时数据生成器（供 GitHub Actions 调用）。
 
 读取仓库内两份权威 Excel（**文件名无需固定，直接用 ERP 导出的原始名即可**）：
-  data/采购订单*.xlsx  （在途订单，Sheet1；多份时按文件名时间戳取最新）
+  data/采购订单*.xlsx  （在途订单，Sheet1；多份时按「最后上传」取最新，见 find_source）
   data/产能*.xlsx      （产能，Sheet1：供应商/供应商简称/采购负责人/月产能）
 
 输出根目录 data.json（结构与在途数据V2.html 内联 DATA 完全一致），

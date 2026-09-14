@@ -13,7 +13,12 @@
 """
 import io, json, os, re, subprocess, sys, openpyxl
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+# 统一使用北京时间(UTC+8)。
+# 不能用 datetime.now()：Actions 运行在 UTC，本地 Windows 是 UTC+8，
+# 两个产地会产出相差 8 小时的时间戳，导致前端 generatedAt 比较出现「新数据被判为旧」。
+BJ = timezone(timedelta(hours=8))
 
 sys.stdout.reconfigure(encoding='utf-8')
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -260,7 +265,7 @@ def main():
         'capSource': '产能表 产能.xlsx (权威源, %d 家真实月产能; 暂定 %d 家按 %d 占位)' % (real_count, pending_count, DEFCAP),
         'rows': len(po), 'poRows': len(po), 'suppliers': len(suppliers),
         'months': months, 'defCap': DEFCAP,
-        'generatedAt': datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+        'generatedAt': datetime.now(BJ).strftime('%Y-%m-%dT%H:%M:%S'),
         'note': '月份由交货日期推导; 数据清洗: 删除空单据编号与业务关闭行; 产线/时效/创建人/单据类型标签来自源表(空则留空); 创建人/单据类型按采购订单编号关联(同PO取最多值); 月产能缺失按默认值补齐',
     }
     DATA = {'meta': meta, 'suppliers': suppliers, 'months': months,

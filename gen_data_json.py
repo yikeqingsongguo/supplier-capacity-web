@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """在途数据看板 · 定时数据生成器（供 GitHub Actions 调用）。
 
-读取仓库内两份权威 Excel：
-  data/采购订单.xlsx  （在途订单，Sheet1）
-  data/产能.xlsx      （产能，Sheet1：供应商/供应商简称/采购负责人/月产能）
+读取仓库内两份权威 Excel（**文件名无需固定，直接用 ERP 导出的原始名即可**）：
+  data/采购订单*.xlsx  （在途订单，Sheet1；多份时按文件名时间戳取最新）
+  data/产能*.xlsx      （产能，Sheet1：供应商/供应商简称/采购负责人/月产能）
 
 输出根目录 data.json（结构与在途数据V2.html 内联 DATA 完全一致），
 供前端 tryCloudUpdate() 以「静态文件」方式加载——前端 0 次 GitHub API 请求。
@@ -11,16 +11,75 @@
 本脚本复刻 _inject_data_v3.py + _patch_cap_dual.py + _inject_spu_v4.py 的逻辑，
 路径全部相对仓库根，可在 Linux(Actions)/Windows 本地运行。
 """
-import io, json, os, re, sys, openpyxl
+import io, json, os, re, subprocess, sys, openpyxl
 from collections import Counter
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 ROOT = os.path.dirname(os.path.abspath(__file__))
-ORDER_XLSX = os.path.join(ROOT, 'data', '采购订单.xlsx')
-CAP_XLSX   = os.path.join(ROOT, 'data', '产能.xlsx')
-OUT        = os.path.join(ROOT, 'data.json')
+OUT  = os.path.join(ROOT, 'data.json')
 DEFCAP = 15000
+
+ORDER_PAT, ORDER_FIXED, ORDER_LABEL = '采购订单', '采购订单.xlsx', '订单'
+CAP_PAT,   CAP_FIXED,   CAP_LABEL   = '产能',     '产能.xlsx',     '产能'
+
+
+def find_source(pattern, fixed_name, label):
+    """定位源表 —— **无需把文件名改成固定名**，直接用 ERP 导出的原始文件名即可。
+
+    规则：
+      1) 先找 data/，data/ 无候选再回退仓库根目录；
+      2) 候选 = 该目录下所有 `{pattern}*.xlsx`（排除 Excel 临时文件 ~$* 与 .bak）；
+      3) 排序判据（取最大者）：
+         ① git 提交时间 —— 真正反映「哪一份最后上传」，适用任意文件名；
+         ② 文件名内嵌 14 位时间戳(YYYYMMDDHHMMSS) —— git 不可用时兜底；
+         ③ 文件名。无时间戳的固定名优先级最低。
+    """
+    dirs = [os.path.join(ROOT, 'data'), ROOT]
+    cands, from_root = [], False
+    for d in dirs:
+        if not os.path.isdir(d):
+            continue
+        found = []
+        for fn in sorted(os.listdir(d)):
+            if not fn.startswith(pattern) or not fn.lower().endswith('.xlsx'):
+                continue
+            if fn.startswith('~$') or fn.endswith('.bak'):
+                continue
+            found.append(os.path.join(d, fn))
+        if found:
+            cands, from_root = found, (d == ROOT)
+            break
+    if not cands:
+        raise SystemExit('%s源表缺失：请在 data/ 放入 %s，或任意 %s*.xlsx（可保留原始文件名）'
+                         % (label, fixed_name, pattern))
+
+    def git_ctime(p):
+        """该文件在 git 中最后一次被提交的时间戳；不可用时返回 0。"""
+        try:
+            out = subprocess.check_output(
+                ['git', 'log', '-1', '--format=%ct', '--',
+                 os.path.relpath(p, ROOT).replace('\\', '/')],
+                cwd=ROOT, stderr=subprocess.DEVNULL).decode().strip()
+            return int(out) if out.isdigit() else 0
+        except Exception:
+            return 0
+
+    def sort_key(p):
+        fn = os.path.basename(p)
+        m = re.search(r'(\d{14})', fn)
+        return (git_ctime(p), 1 if m else 0, m.group(1) if m else '', fn)
+
+    cands.sort(key=sort_key)
+    chosen = cands[-1]
+    rel = lambda p: os.path.relpath(p, ROOT).replace('\\', '/')
+    print('[%s] 源表候选 %d 个: %s' % (label, len(cands), ', '.join(rel(c) for c in cands)))
+    print('[%s] 选用: %s' % (label, rel(chosen)))
+    if len(cands) > 1:
+        print('[%s] 提示: 存在多份源表，已按「最后上传时间」取最新；建议只保留这一份，避免混淆' % label)
+    if from_root:
+        print('[%s] 提示: 文件位于仓库根目录，建议移动到 data/ 统一管理' % label)
+    return chosen
 
 # ---------- 工具 ----------
 def num(v):
@@ -60,10 +119,10 @@ def spu_of(code):
     return d[:4]
 
 # ---------- 1) 产能（权威源） ----------
-def load_capacity():
+def load_capacity(cap_xlsx):
     """返回 {供应商全名: {'short','owner','effCap'}}，月产能为数字>0 才取值，否则 0。"""
     cap = {}
-    wb = openpyxl.load_workbook(CAP_XLSX, data_only=True, read_only=True)
+    wb = openpyxl.load_workbook(cap_xlsx, data_only=True, read_only=True)
     ws = wb.active
     for r in ws.iter_rows(values_only=True):
         sup = (r[0] or '').strip() if r and r[0] is not None else ''
@@ -85,10 +144,14 @@ def load_capacity():
     return cap
 
 def main():
-    CAP = load_capacity()
+    # ---------- 0) 源表定位（免改名，自动取最新） ----------
+    order_xlsx = find_source(ORDER_PAT, ORDER_FIXED, ORDER_LABEL)
+    cap_xlsx   = find_source(CAP_PAT,   CAP_FIXED,   CAP_LABEL)
+
+    CAP = load_capacity(cap_xlsx)
 
     # ---------- 2) 订单 ----------
-    wb = openpyxl.load_workbook(ORDER_XLSX, data_only=True, read_only=True)
+    wb = openpyxl.load_workbook(order_xlsx, data_only=True, read_only=True)
     ws = wb['Sheet1']
     rows_iter = ws.iter_rows(values_only=True)
     header = [str(h).strip() if h is not None else '' for h in next(rows_iter)]
@@ -192,7 +255,7 @@ def main():
     pending_count = sum(1 for v in CAP.values() if v['effCap'] == 0)
 
     meta = {
-        'orderSource': '采购订单.xlsx',
+        'orderSource': os.path.basename(order_xlsx),
         'orderSheet': 'Sheet1',
         'capSource': '产能表 产能.xlsx (权威源, %d 家真实月产能; 暂定 %d 家按 %d 占位)' % (real_count, pending_count, DEFCAP),
         'rows': len(po), 'poRows': len(po), 'suppliers': len(suppliers),

@@ -331,11 +331,12 @@ a.spu-count:hover, a.wk-spu-link:hover, a.wk-cap-link:hover, a.spu-link:hover, a
 /* 周计划明细表 */
 #wkDetailTbl{ table-layout:fixed !important; width:100%; }
 #wkDetailTbl th,#wkDetailTbl td{ padding:7px 8px !important; font-size:14px; }
-#wkDetailTbl th:nth-child(1){width:16%;} /* 供应商 */
-#wkDetailTbl th:nth-child(2){width:12%;} /* SPU */
-#wkDetailTbl th:nth-child(3){width:9%;text-align:right;} /* 订单数 */
-#wkDetailTbl th:nth-child(4){width:36%;} /* 物料名称 */
-#wkDetailTbl th:nth-child(5){width:16%;} /* 待交货日期 */
+#wkDetailTbl th:nth-child(1){width:13%;} /* 供应商 */
+#wkDetailTbl th:nth-child(2){width:21%;} /* SKU */
+#wkDetailTbl th:nth-child(3){width:9%;} /* SPU */
+#wkDetailTbl th:nth-child(4){width:11%;text-align:right;} /* 计划数量 */
+#wkDetailTbl th:nth-child(5){width:30%;} /* 规格型号 */
+#wkDetailTbl th:nth-child(6){width:16%;} /* 待交货日期 */
 </style>
 <style>
 .flt{cursor:pointer;color:var(--muted);font-size:14px; margin-left:4px; user-select:none; vertical-align:middle; letter-spacing:.02em; font-weight:500;}
@@ -637,7 +638,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <button class="btn btn-sm" id="wkDApply" type="button">筛选</button>
           <button class="btn btn-sm" id="wkDClear" type="button">清除</button>
         </div>
-        <div class="tbl-scroll" style="max-height:420px;"><table id="wkDetailTbl"><thead><tr><th>供应商</th><th>SPU</th><th class="num">订单数</th><th>物料名称</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
+        <div class="tbl-scroll" style="max-height:420px;"><table id="wkDetailTbl"><thead><tr><th>供应商</th><th>SKU</th><th>SPU</th><th class="num">计划数量</th><th>规格型号</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
       </div>
       </div>
     </div>
@@ -2224,18 +2225,19 @@ function renderWeekly(){
       });
     }
     wkRows.sort((a,b)=>{ const da=a.preDeliveryDate||'', db=b.preDeliveryDate||''; if(da!==db) return da<db?-1:1; return (a.supplier||'').localeCompare(b.supplier||'','zh'); });
-    /* 按(供应商, SPU)聚合汇总：同一供应商+同一SPU的多条记录合并为一行，订单数求和 */
-    const spuMap = new Map();
+    /* 按(供应商, SKU)聚合：明细下沉到 SKU 粒度（键=物料编码） */
+    const skuMap = new Map();
     wkRows.forEach(r => {
-      const k = (r.supplier||'') + '\x00' + (r.spu||'—');
-      if (!spuMap.has(k)) spuMap.set(k, { supplier: r.supplier, spu: r.spu||'—', purchase: 0, materialName: r.materialName||'', preDeliveryDate: r.preDeliveryDate||'—', cnt: 0 });
-      const e = spuMap.get(k);
+      const k = (r.supplier||'') + '\x00' + (r.materialCode || r.spu || '—');
+      if (!skuMap.has(k)) skuMap.set(k, { supplier: r.supplier, sku: r.materialCode || r.spu || '—', spu: r.spu||'—', purchase: 0, spec: r.spec||'', materialName: r.materialName||'', preDeliveryDate: r.preDeliveryDate||'—', cnt: 0 });
+      const e = skuMap.get(k);
       e.purchase += (r.purchase || 0);
       e.cnt++;
+      if (r.spec && !e.spec) e.spec = r.spec;
       if (r.materialName && !e.materialName) e.materialName = r.materialName;
     });
-    const aggRows = [...spuMap.values()];
-    if(!wkRows.length){ dtb.innerHTML='<tr><td colspan="5" class="empty">暂无周计划明细</td></tr>'; }
+    const aggRows = [...skuMap.values()];
+    if(!wkRows.length){ dtb.innerHTML='<tr><td colspan="6" class="empty">暂无周计划明细</td></tr>'; }
     else {
       /* 按日期所在周计算产能负荷率提示 */
       const loadHint = (dFrom||dTo) ? (() => {
@@ -2243,7 +2245,7 @@ function renderWeekly(){
         const used = wkRows.reduce((s,r)=>s+(r.purchase||0),0);
         return capTotal>0 ? ' · 筛选范围负荷率 '+(used/capTotal*100).toFixed(1)+'%' : '';
       })() : '';
-      dtb.innerHTML='<tr><td colspan="5" style="font-size:14px;color:var(--muted);padding:4px 8px;">共 '+aggRows.length+' 项（'+wkRows.length+' 条原始）'+loadHint+'</td></tr>'+aggRows.map(r=>'<tr class="clickable wk-detail-row"><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td>'+(r.spu||'—')+'</td><td class="num"><a href="#" class="spu-count wk-spu-link" data-sup="'+escHtml(r.supplier)+'" data-spu="'+escHtml(r.spu||'—')+'">'+fmt(r.purchase)+'</a></td><td>'+(r.materialName||'')+'</td><td>'+(r.preDeliveryDate||'—')+'</td></tr>').join('');
+      dtb.innerHTML='<tr><td colspan="6" style="font-size:14px;color:var(--muted);padding:4px 8px;">共 '+aggRows.length+' 个 SKU（'+wkRows.length+' 条原始）'+loadHint+'</td></tr>'+aggRows.map(r=>'<tr class="clickable wk-detail-row"><td title="'+escHtml(r.supplier)+'">'+supShort(r.supplier)+'</td><td><a href="#" class="spu-count wk-spu-link" data-sup="'+escHtml(r.supplier)+'" data-spu="'+escHtml(r.spu)+'">'+escHtml(r.sku)+'</a></td><td>'+(r.spu||'—')+'</td><td class="num">'+fmt(r.purchase)+'</td><td>'+(r.spec||'—')+'</td><td>'+(r.preDeliveryDate||'—')+'</td></tr>').join('');
       dtb.onclick=e=>{ const a=e.target.closest('a.wk-spu-link'); if(a){ e.preventDefault(); openSkuModal(a.dataset.sup, a.dataset.spu, ''); return; } };
     }
     /* 绑定日期筛选按钮 */
@@ -2342,6 +2344,18 @@ function wkStackSvg(rows, title, tag){
   return '<div class="chart-wrap" style="overflow-x:auto;">'+s+'</div>';
 }
 /* 下钻：需下单明细汇总（SKU 粒度） */
+/* tagModal 底部提示：默认文案缓存 + 临时替换 + 还原
+   （#tagModal 被 6 个弹窗共用，其 .spu-modal-foot 是静态共享文案，不能直接改） */
+var _tagFootDef = null;
+function tagFootEl(){
+  const o = document.getElementById('tagModal');
+  return o ? o.querySelector('.spu-modal-foot') : null;
+}
+function setTagFoot(txt){
+  const f = tagFootEl(); if(!f) return;
+  if(_tagFootDef === null) _tagFootDef = f.textContent;
+  f.textContent = (txt == null) ? _tagFootDef : txt;
+}
 function openWkOrderModal(supName, mon){
   const ov = document.getElementById('tagModal'); if(!ov) return;
   const mon2 = (mon && mon!=='全部月份') ? mon : null;
@@ -2397,6 +2411,7 @@ function openWkOrderModal(supName, mon){
   ov.querySelector('.spu-modal-sub').textContent = escHtml(supShort(supName))+' · '+(mon2||'全部月份');
   ov.style.display = 'flex';
   ov.querySelector('.spu-modal-body').onclick = null;
+  setTagFoot('数量为该 SKU 的周计划下单量 ｜ 待交货日期 = ERP 导出日期 + 31 天');
 }
 /* 供应商分配明细表 */
 function renderWkSupAlloc(rows){
@@ -3340,7 +3355,7 @@ function openRecsModal(title, recs, drillFn){
   const sub='计划 '+fmt(e.pur)+' · 已收 '+fmt(e.rec)+' · 剩余 '+fmt(e.rem)+' · SPU '+spus.length+' · 供应商 '+e.sup.size;
   showSpusModal(title, sub, html, spus, drillFn);
 }
-function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none'; }
+function closeTagModal(){ const ov=$('#tagModal'); if(ov) ov.style.display='none'; if(typeof setTagFoot==='function') setTagFoot(null); }
 
 /* ---------- 事件绑定 ---------- */
 /* 导航 id → 页面 key 显式映射（避免 navNewProduct 经 replace+toLowerCase 变成 'newproduct' 而匹配不到 'newProduct'） */

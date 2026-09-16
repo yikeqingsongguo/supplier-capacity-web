@@ -606,13 +606,28 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="card"><h3>现有产能负荷率 <span class="hint" id="wkLoadHint"></span></h3><div class="donut-wrap"><div id="wkDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo"></div></div></div>
       <div class="card"><h3>本周计划负荷率 <span class="hint" id="wkSimHint"></span></h3><div class="donut-wrap"><div id="wkDonut2" style="flex:0 0 150px;"></div><div class="donut-info" id="wkDonutInfo2"></div></div></div>
     </div>
+    <!-- 数量堆积图：按分界值拆两组 -->
+    <div class="card card-full" style="margin-bottom:18px;">
+      <h3>数量堆积图 <span class="hint" id="wkStackHint"></span></h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <span style="font-size:14px;color:var(--muted)">分界值</span>
+        <input type="number" id="wkStackTh" class="btn" style="padding:5px 10px;width:118px;" value="10000" min="0" step="500">
+        <span style="font-size:13px;color:var(--muted)">合计（在途剩余 + 周计划）≥ 分界值 归入 图 A，&lt; 分界值 归入 图 B；两组各自独立比例尺，点柱可看需下单明细</span>
+      </div>
+      <div id="wkStackChart"></div>
+    </div>
     <!-- 供应商负荷对比 + 周计划明细 并列双栏 -->
     <div style="display:flex;gap:18px;align-items:start;">
       <div class="card" style="flex:1;min-width:0;">
         <h3>供应商负荷对比 <span class="hint">按月份拆分在途与周计划</span></h3>
         <div class="tbl-scroll" style="max-height:560px;"><table id="wkTbl"><thead><tr><th>供应商</th><th>月份</th><th class="num">在途数量</th><th class="num">周计划数量</th><th class="num">现有负荷率</th><th class="num">本周计划负荷率</th><th class="num">剩余产能</th><th>周产能占用明细</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
       </div>
-      <div class="card" style="flex:1;min-width:0;">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:18px;">
+      <div class="card" style="min-width:0;">
+        <h3>供应商分配明细 <span class="hint">本次周计划按供应商汇总</span></h3>
+        <div class="tbl-scroll" style="max-height:250px;"><table id="wkSupAllocTbl"><thead><tr><th>供应商</th><th class="num">SPU 数</th><th class="num">SKU 数</th><th class="num">计划数量</th><th class="num">占比</th><th>明细</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card" style="min-width:0;">
         <h3>周计划明细 <span class="hint">SPU 列显示数量，点击查看详情</span></h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
           <span style="font-size:14px;color:var(--muted)">待交货日期</span>
@@ -623,6 +638,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <button class="btn btn-sm" id="wkDClear" type="button">清除</button>
         </div>
         <div class="tbl-scroll" style="max-height:420px;"><table id="wkDetailTbl"><thead><tr><th>供应商</th><th>SPU</th><th class="num">订单数</th><th>物料名称</th><th>待交货日期</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      </div>
+    </div>
+    <!-- 本月 / 下月产能缺口对账 -->
+    <div class="card card-full" style="margin-top:16px;">
+      <h3>本月 / 下月产能缺口对账 <span class="hint" id="wkGapHint"></span></h3>
+      <div id="wkGapCards"></div>
+      <div class="tbl-scroll" style="max-height:340px;margin-top:14px;">
+        <table id="wkGapTbl"><thead><tr>
+          <th>供应商</th><th class="num">可用产能</th>
+          <th class="num">本月在途</th><th class="num">本月周计划</th><th class="num">本月余量/超额</th>
+          <th class="num">下月在途</th><th class="num">下月周计划</th><th class="num">下月余量/超额</th>
+        </tr></thead><tbody></tbody></table>
       </div>
     </div>
     <div class="card card-full" style="margin-top:16px;">
@@ -2098,6 +2126,16 @@ function recsKind(supplier, month, weekly){
   return list;
 }
 function monthFromName(n){ const ms=String(n||'').match(/\d{1,2}/g)||[]; for(const x of ms){ const v=+x; if(v>=1&&v<=12) return v+'月'; } return '待排月'; }
+/* 从文件名解析「ERP 导出日期」→ 'YYYY-MM-DD'（解析失败返回 ''）。优先级：时间戳 > 完整日期 > 月.日 */
+function planDateFromName(name){
+  const str=String(name||''); let y=null,m=null,d=null,mm=null;
+  if((mm=str.match(/(20\d{2})(\d{2})(\d{2})(?:_\d{4})?/))){ y=+mm[1]; m=+mm[2]; d=+mm[3]; }
+  else if((mm=str.match(/(20\d{2})\s*[-.\/年]\s*(\d{1,2})\s*[-.\/月]\s*(\d{1,2})/))){ y=+mm[1]; m=+mm[2]; d=+mm[3]; }
+  else if((mm=str.match(/(\d{1,2})\s*[.月]\s*(\d{1,2})/))){ y=new Date().getFullYear(); m=+mm[1]; d=+mm[2]; }
+  if(y==null||!(m>=1&&m<=12)) return '';
+  if(!(d>=1&&d<=new Date(y,m,0).getDate())) return '';
+  return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
 function weeklyMonths(){ const s=new Set(); for(const r of (DATA.weekly||[])) if(r.month) s.add(r.month); return [...s].sort((a,b)=>parseInt(a)-parseInt(b)); }
 function renderDonutEl(elId, load, title){
   const el=document.getElementById(elId); if(!el) return;
@@ -2138,7 +2176,7 @@ function renderWeekly(){
     const wkCap = weeks.length ? Math.round(cap / weeks.length) : cap;
     const weekDetail = weeks.map(w=>{
       const inW = inVal.recs.filter(r=>dateInIsoWeek(r.deliveryDate, w.start)).reduce((s,r)=>s+(r.remaining||0),0);
-      const plW = wkVal.recs.filter(r=>dateInIsoWeek(r.preDeliveryDate||r.deliveryDate, w.start)).reduce((s,r)=>s+(r.purchase||0),0);
+      const plW = wkVal.recs.filter(r=>dateInIsoWeek(r.preDeliveryIso||r.deliveryDate, w.start)).reduce((s,r)=>s+(r.purchase||0),0);
       const used = inW + plW;
       return { w:w.w, label:w.label, inW, plW, used, cap:wkCap, rem:Math.max(0, wkCap-used), load: wkCap>0?used/wkCap:0 };
     }).filter(w=>w.used>0);
@@ -2215,8 +2253,281 @@ function renderWeekly(){
 
   $('#wkNote').innerHTML = '现有负荷 = 在途剩余收料 ÷ 有效产能；本周计划负荷 = (在途剩余收料 + 周计划数量) ÷ 有效产能。周计划按预计交货日期纳入对应月份。周产能占用明细按 ISO 自然周（周一始）拆分，周产能 = 月有效产能 ÷ 该月周数，格式为「W周次 已占用/周产能 · 剩余」。'+(wm.length?(' 已导入周计划月份：'+wm.join('、')):' 尚未导入周计划文件');
 
+  /* 新增区块：堆积图 / 供应商分配明细 / 本月下月产能缺口 */
+  renderWkAddons();
+
   /* 预估产能计算初始化 */
   initCapCalc();
+}
+
+/* ---------- 周计划新增：数量堆积图 / 供应商分配明细 / 本月下月产能缺口 ---------- */
+const WK_TH_DEF = 10000;
+function wkNiceCeil(v){
+  if(!(v>0)) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / p;
+  const s = n<=1?1 : n<=2?2 : n<=2.5?2.5 : n<=5?5 : 10;
+  return s * p;
+}
+function wkCurSel(){
+  const sEl = $('#wkSup'), mEl = $('#wkMonth');
+  const sv = sEl ? sEl.value : '';
+  return { sup: (sv && sv!=='全部') ? sv : null, mon: (mEl && mEl.value) ? mEl.value : '全部月份' };
+}
+/* 按 (供应商) 汇总：在途剩余收料 + 周计划数量 + SPU 集合 */
+function wkAgg(sup, mon){
+  const map = new Map();
+  function pick(name){
+    if(!map.has(name)) map.set(name, {sup:name, short:supShort(name), inQty:0, plQty:0, spuSet:new Set(), skuSet:new Set()});
+    return map.get(name);
+  }
+  for(const r of DATA.po){
+    if(isWeekly(r) || !r.supplier) continue;
+    if(sup && r.supplier!==sup) continue;
+    if(mon && mon!=='全部月份' && r.month!==mon) continue;
+    pick(r.supplier).inQty += (r.remaining||0);
+  }
+  for(const r of (DATA.weekly||[])){
+    if(!r.supplier) continue;
+    if(sup && r.supplier!==sup) continue;
+    if(mon && mon!=='全部月份' && r.month!==mon) continue;
+    const e = pick(r.supplier);
+    e.plQty += (r.purchase||0);
+    e.spuSet.add(r.spu || r.materialCode || '—');
+    e.skuSet.add(r.materialCode || r.spu || '—');
+  }
+  return [...map.values()];
+}
+/* 单张堆叠柱 SVG（暖色极简） */
+function wkStackSvg(rows, title, tag){
+  const list = rows.slice().sort((a,b)=> (b.inQty+b.plQty)-(a.inQty+a.plQty) || a.sup.localeCompare(b.sup,'zh'));
+  if(!list.length) return '<div class="empty" style="padding:16px 0;">该区间暂无供应商（可调整上方分界值）</div>';
+  const STEP=64, W=Math.max(780, 64+16+list.length*STEP), H=254, padL=64, padR=16, padT=30, padB=58;
+  const innerH = H - padT - padB;
+  let maxV = 0; list.forEach(r=>{ const t=r.inQty+r.plQty; if(t>maxV) maxV=t; });
+  const niceMax = wkNiceCeil(maxV);
+  const Y = v => padT + innerH - (v/niceMax)*innerH;
+  const barW = STEP*0.6, pid = 'wkHatch_'+tag;
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;" role="img" aria-label="'+escHtml(title)+'">';
+  s += '<defs><pattern id="'+pid+'" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">'
+     + '<line x1="0" y1="0" x2="0" y2="5" stroke="#C9A86C" stroke-width="2.5"/></pattern></defs>';
+  s += '<text x="'+padL+'" y="18" font-size="13" font-weight="700" fill="#2C2C2C">'+escHtml(title)+' · 单位：件</text>';
+  for(let i=0;i<=4;i++){
+    const v = niceMax*i/4, yy = Y(v);
+    s += '<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+yy.toFixed(1)+'" y2="'+yy.toFixed(1)+'" stroke="'+(i===0?'#D9D1C4':'#EDE7DC')+'" stroke-width="1"'+(i===0?'':' stroke-dasharray="3 3"')+'/>';
+    s += '<text x="'+(padL-8)+'" y="'+(yy+4).toFixed(1)+'" font-size="11" fill="#8A8279" text-anchor="end">'+fmt(Math.round(v))+'</text>';
+  }
+  const legY = H-10;
+  s += '<rect x="'+padL+'" y="'+(legY-9)+'" width="13" height="10" fill="#8499A8"/>';
+  s += '<text x="'+(padL+18)+'" y="'+legY+'" font-size="11" fill="#8A8279">在途剩余收料</text>';
+  s += '<rect x="'+(padL+120)+'" y="'+(legY-9)+'" width="13" height="10" fill="url(#'+pid+')" stroke="#C9A86C" stroke-width="1"/>';
+  s += '<text x="'+(padL+138)+'" y="'+legY+'" font-size="11" fill="#8A8279">周计划数量</text>';
+  list.forEach((r, idx)=>{
+    const total = r.inQty + r.plQty;
+    const cx = padL + STEP*(idx+0.5);
+    const yTop = Y(total), yIn = Y(r.inQty);
+    const hTop = Math.max(0, yIn - yTop), hIn = Math.max(0, padT+innerH - yIn);
+    const lx = (cx - barW/2).toFixed(1);
+    s += '<g data-sup="'+escHtml(r.sup)+'" style="cursor:pointer">';
+    s += '<title>'+escHtml(r.short)+' · 合计 '+fmt(total)+'（在途 '+fmt(r.inQty)+' + 周计划 '+fmt(r.plQty)+'）</title>';
+    if(hTop>0) s += '<rect x="'+lx+'" y="'+yTop.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hTop.toFixed(1)+'" fill="url(#'+pid+')" stroke="#C9A86C" stroke-width="1"/>';
+    if(hIn>0) s += '<rect x="'+lx+'" y="'+yIn.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+hIn.toFixed(1)+'" fill="#8499A8"/>';
+    s += '<text x="'+cx.toFixed(1)+'" y="'+(yTop-6).toFixed(1)+'" font-size="11" font-weight="700" fill="#2C2C2C" text-anchor="middle">'+fmt(total)+'</text>';
+    const nm = r.short.length>5 ? r.short.slice(0,5)+'…' : r.short;
+    s += '<text x="'+cx.toFixed(1)+'" y="'+(padT+innerH+16)+'" font-size="11" fill="#2C2C2C" text-anchor="middle">'+escHtml(nm)+'</text>';
+    s += '<text x="'+cx.toFixed(1)+'" y="'+(padT+innerH+30)+'" font-size="11" fill="#8A8279" text-anchor="middle">'+r.spuSet.size+' SPU</text>';
+    s += '</g>';
+  });
+  s += '</svg>';
+  return '<div class="chart-wrap" style="overflow-x:auto;">'+s+'</div>';
+}
+/* 下钻：需下单明细汇总（SKU 粒度） */
+function openWkOrderModal(supName, mon){
+  const ov = document.getElementById('tagModal'); if(!ov) return;
+  const mon2 = (mon && mon!=='全部月份') ? mon : null;
+  const list = (DATA.weekly||[]).filter(r=> r.supplier===supName && (!mon2 || r.month===mon2));
+  /* 物料名称索引：周计划源表无「物料名称」列，从在途采购订单按 SKU 反查回填 */
+  const nameIdx = new Map();
+  for(const r of DATA.po){ const c=r.materialCode; if(c && r.materialName && !nameIdx.has(c)) nameIdx.set(c, r.materialName); }
+  /* 按 SKU（物料编码）聚合 —— 明细下沉到 SKU 粒度 */
+  const skuMap = new Map();
+  let plQty = 0;
+  for(const r of list){
+    const q = (r.purchase||0);
+    plQty += q;
+    const k = r.materialCode || r.spu || '—';
+    if(!skuMap.has(k)) skuMap.set(k, {sku:k, spu:r.spu||'—', name:r.materialName||nameIdx.get(k)||'', spec:r.spec||'', qty:0, dd:r.preDeliveryDate||'—'});
+    const e = skuMap.get(k);
+    e.qty += q;
+    if(!e.name && r.materialName) e.name = r.materialName;
+    if(!e.spec && r.spec) e.spec = r.spec;
+  }
+  let inQty = 0;
+  for(const r of DATA.po){
+    if(isWeekly(r) || r.supplier!==supName) continue;
+    if(mon2 && r.month!==mon2) continue;
+    inQty += (r.remaining||0);
+  }
+  const cap = capOf(supName);
+  const used = inQty + plQty;
+  const gap = cap - used;
+  const gapTxt = cap>0 ? (gap<0 ? ('超额 '+fmt(-gap)) : ('余量 '+fmt(gap))) : '产能待填';
+  const gapCol = cap>0 && gap<0 ? 'var(--red)' : 'var(--green)';
+  let html = '<h3 style="margin:0 0 8px;font-size:14px;">'+escHtml(supShort(supName))+' · 需下单明细汇总</h3>';
+  html += '<p style="font-size:14px;color:var(--muted);margin:0 0 10px;">'
+        + (mon2||'全部月份')+' ｜ 有效产能 '+fmt(cap)+' ｜ 在途剩余 '+fmt(inQty)+' + 周计划 '+fmt(plQty)
+        + ' = 已占用 '+fmt(used)+' ｜ <b style="color:'+gapCol+'">'+gapTxt+'</b></p>';
+  html += '<table class="mini" style="font-size:13px;"><thead><tr>'
+        + '<th>SKU</th><th>SPU</th><th>物料名称</th><th>规格型号</th>'
+        + '<th class="r">计划数量</th><th>待交货日期</th></tr></thead><tbody>';
+  if(!skuMap.size) html += '<tr><td colspan="6" class="empty">该条件下无周计划明细</td></tr>';
+  const arr = [...skuMap.values()].sort((a,b)=> b.qty-a.qty || String(a.sku).localeCompare(String(b.sku),'zh'));
+  arr.forEach(e=>{
+    html += '<tr><td>'+escHtml(e.sku)+'</td><td>'+escHtml(e.spu)+'</td>'
+          + '<td>'+escHtml(e.name||'—')+'</td><td>'+escHtml(e.spec||'—')+'</td>'
+          + '<td class="r">'+fmt(e.qty)+'</td><td>'+escHtml(e.dd)+'</td></tr>';
+  });
+  const spuCnt = new Set(arr.map(e=> e.spu)).size;
+  html += '<tr style="background:var(--bg2);font-weight:700;"><td>合计</td>'
+        + '<td colspan="2">'+arr.length+' 个 SKU · '+spuCnt+' 个 SPU</td>'
+        + '<td></td><td class="r"><b>'+fmt(plQty)+'</b></td><td></td></tr>';
+  html += '</tbody></table>';
+  ov.querySelector('.spu-modal-body').innerHTML = html;
+  ov.querySelector('.spu-modal-title').textContent = '需下单明细汇总';
+  ov.querySelector('.spu-modal-sub').textContent = escHtml(supShort(supName))+' · '+(mon2||'全部月份');
+  ov.style.display = 'flex';
+  ov.querySelector('.spu-modal-body').onclick = null;
+}
+/* 供应商分配明细表 */
+function renderWkSupAlloc(rows){
+  const tb = $('#wkSupAllocTbl tbody'); if(!tb) return;
+  const list = rows.filter(r=> r.plQty>0).sort((a,b)=> b.plQty-a.plQty || a.sup.localeCompare(b.sup,'zh'));
+  if(!list.length){ tb.innerHTML = '<tr><td colspan="6" class="empty">尚未导入周计划</td></tr>'; return; }
+  const tot = list.reduce((s,r)=> s+r.plQty, 0);
+  const allSpu = new Set(), allSku = new Set();
+  list.forEach(r=>{ r.spuSet.forEach(k=> allSpu.add(k)); r.skuSet.forEach(k=> allSku.add(k)); });
+  tb.innerHTML = list.map(r=>{
+    const pct = tot>0 ? (r.plQty/tot*100) : 0;
+    return '<tr><td>'+escHtml(r.short)+'</td>'
+      + '<td class="num">'+r.spuSet.size+'</td>'
+      + '<td class="num">'+r.skuSet.size+'</td>'
+      + '<td class="num">'+fmt(r.plQty)+'</td>'
+      + '<td class="num">'+pct.toFixed(1)+'%</td>'
+      + '<td><a href="#" class="spu-count wk-alloc-link" data-sup="'+escHtml(r.sup)+'">查看明细 ▸</a></td></tr>';
+  }).join('')
+  + '<tr style="background:var(--bg2);font-weight:700;"><td>合计</td>'
+  + '<td class="num">'+allSpu.size+'</td><td class="num">'+allSku.size+'</td>'
+  + '<td class="num">'+fmt(tot)+'</td><td class="num">100%</td><td></td></tr>';
+  tb.onclick = e=>{
+    const a = e.target.closest ? e.target.closest('a.wk-alloc-link') : null;
+    if(!a) return;
+    e.preventDefault();
+    const c = wkCurSel();
+    openWkOrderModal(a.getAttribute('data-sup'), c.mon);
+  };
+}
+/* 本月 / 下月产能缺口 */
+function wkNextMon(mon){
+  const m = parseInt(mon, 10);
+  if(!m) return '1月';
+  return (m===12 ? 1 : m+1) + '月';
+}
+function wkMonSum(supList, mon){
+  const set = new Set(supList);
+  let inQty=0, plQty=0;
+  for(const r of DATA.po){
+    if(isWeekly(r) || !r.supplier || !set.has(r.supplier)) continue;
+    if(r.month!==mon) continue;
+    inQty += (r.remaining||0);
+  }
+  for(const r of (DATA.weekly||[])){
+    if(!r.supplier || !set.has(r.supplier)) continue;
+    if(r.month!==mon) continue;
+    plQty += (r.purchase||0);
+  }
+  let cap = 0; for(const n of supList) cap += capOf(n);
+  return { inQty, plQty, used: inQty+plQty, cap, gap: cap-(inQty+plQty) };
+}
+function wkGapCell(gap, cap){
+  if(!(cap>0)) return '<span style="color:var(--muted)">待填</span>';
+  if(gap < 0) return '<b style="color:var(--red)">超额 '+fmt(-gap)+'</b>';
+  return '<b style="color:var(--green)">余 '+fmt(gap)+'</b>';
+}
+function renderWkGap(rows){
+  const cur = currentMonth();
+  const nxt = wkNextMon(cur);
+  const supList = rows.map(r=> r.sup);
+  const hint = $('#wkGapHint');
+  if(hint) hint.textContent = '本月 '+cur+' / 下月 '+nxt+'（周计划按「导出日 + 31 天」落到下月）';
+  const cards = $('#wkGapCards');
+  if(cards){
+    if(!supList.length){ cards.innerHTML = '<div class="empty" style="padding:8px 0;">暂无数据</div>'; }
+    else {
+      let h = '<div style="display:flex;gap:18px;flex-wrap:wrap;">';
+      [[cur,'本月'],[nxt,'下月']].forEach(function(pair){
+        const mon = pair[0], tagLabel = pair[1];
+        const s = wkMonSum(supList, mon);
+        const col = s.cap>0 ? (s.gap<0?'var(--red)':'var(--green)') : 'var(--muted)';
+        const gapVal = s.cap>0 ? (s.gap<0 ? ('超额 '+fmt(-s.gap)) : ('余 '+fmt(s.gap))) : '待填';
+        h += '<div style="flex:1 1 380px;min-width:300px;">'
+          + '<div style="font-size:14px;color:var(--muted);font-weight:700;margin-bottom:8px;">'+tagLabel+' · '+mon+'</div>'
+          + '<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0;">'
+          + '<div class="kpi"><div class="label">在途剩余收料</div><div class="val">'+fmt(s.inQty)+'</div></div>'
+          + '<div class="kpi"><div class="label">周计划数量</div><div class="val">'+fmt(s.plQty)+'</div></div>'
+          + '<div class="kpi"><div class="label">合计占用 / 可用产能</div><div class="val">'+fmt(s.used)+'<span class="unit">/ '+fmt(s.cap)+'</span></div></div>'
+          + '<div class="kpi"><div class="label">产能缺口 / 超额</div><div class="val" style="color:'+col+';font-size:22px;">'+gapVal+'</div></div>'
+          + '</div></div>';
+      });
+      h += '</div>';
+      cards.innerHTML = h;
+    }
+  }
+  const tb = $('#wkGapTbl tbody');
+  if(!tb) return;
+  const list = rows.slice().sort((a,b)=> (b.inQty+b.plQty)-(a.inQty+a.plQty) || a.sup.localeCompare(b.sup,'zh'));
+  if(!list.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>'; return; }
+  let totNow=0, totNowPl=0, totNext=0, totNextPl=0, totCap=0;
+  tb.innerHTML = list.map(r=>{
+    const a = wkMonSum([r.sup], cur), b = wkMonSum([r.sup], nxt);
+    totNow += a.inQty; totNowPl += a.plQty; totNext += b.inQty; totNextPl += b.plQty; totCap += a.cap;
+    return '<tr><td>'+escHtml(r.short)+'</td>'
+      + '<td class="num">'+(a.cap>0?fmt(a.cap):'待填')+'</td>'
+      + '<td class="num">'+fmt(a.inQty)+'</td><td class="num">'+fmt(a.plQty)+'</td><td class="num">'+wkGapCell(a.gap, a.cap)+'</td>'
+      + '<td class="num">'+fmt(b.inQty)+'</td><td class="num">'+fmt(b.plQty)+'</td><td class="num">'+wkGapCell(b.gap, b.cap)+'</td></tr>';
+  }).join('')
+  + '<tr style="background:var(--bg2);font-weight:700;"><td>合计</td><td class="num">'+fmt(totCap)+'</td>'
+  + '<td class="num">'+fmt(totNow)+'</td><td class="num">'+fmt(totNowPl)+'</td><td class="num">'+wkGapCell(totCap-(totNow+totNowPl), totCap)+'</td>'
+  + '<td class="num">'+fmt(totNext)+'</td><td class="num">'+fmt(totNextPl)+'</td><td class="num">'+wkGapCell(totCap-(totNext+totNextPl), totCap)+'</td></tr>';
+}
+/* 统一入口：在 renderWeekly 末尾调用 */
+function renderWkAddons(){
+  const c = wkCurSel();
+  const rows = wkAgg(c.sup, c.mon).filter(r=> supplierHasData(r.sup));
+  const host = $('#wkStackChart');
+  if(host){
+    const thEl = $('#wkStackTh');
+    let th = Number(thEl && thEl.value);
+    if(!(th>0)) th = WK_TH_DEF;
+    const hi = rows.filter(r=> (r.inQty+r.plQty) >= th);
+    const lo = rows.filter(r=> (r.inQty+r.plQty) < th);
+    const hint = $('#wkStackHint');
+    if(hint) hint.textContent = '共 '+rows.length+' 家 · 分界值 '+fmt(th)+' → 图 A '+hi.length+' 家 / 图 B '+lo.length+' 家';
+    host.innerHTML = wkStackSvg(hi, '图 A · 合计 ≥ '+fmt(th)+'（'+hi.length+' 家）', 'a')
+                   + wkStackSvg(lo, '图 B · 合计 < '+fmt(th)+'（'+lo.length+' 家）', 'b');
+    host.onclick = e=>{
+      const g = e.target.closest ? e.target.closest('g[data-sup]') : null;
+      if(!g) return;
+      openWkOrderModal(g.getAttribute('data-sup'), c.mon);
+    };
+    if(thEl && !thEl._bound){
+      thEl._bound = 1;
+      const rerun = ()=>{ clearTimeout(thEl._t); thEl._t = setTimeout(()=>{ renderWeekly(); }, 320); };
+      thEl.addEventListener('change', rerun);
+      thEl.addEventListener('input', rerun);
+    }
+  }
+  renderWkSupAlloc(rows);
+  renderWkGap(rows);
 }
 
 /* ---------- 预估产能计算 ---------- */
@@ -2499,7 +2810,8 @@ function parseWeeklyXLSX(file){
         const e=g.get(k); e.purchase+=qty; const mn=(row[hm.materialName]||'').toString(); if(mn && mn.length < (e.materialName.length||999)) e.materialName=mn;
       }
       const month=monthFromName(file.name);
-      const md=String(file.name).match(/(\d{1,2})\.(\d{1,2})/); const planDate = md? ('2026-'+String(+md[1]).padStart(2,'0')+'-'+String(+md[2]).padStart(2,'0')) : '';
+      /* 口径（已确认）：ERP 导出日期 + 31 天 = 待交货日期，据此归入对应月份 */
+      const planDate = planDateFromName(file.name);
       const preDeliveryIso = planDate ? (()=>{ const d=new Date(planDate); d.setDate(d.getDate()+31); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })() : '';
       const preDeliveryDate = preDeliveryIso ? `${parseInt(preDeliveryIso.slice(5,7))}月${parseInt(preDeliveryIso.slice(8,10))}日` : '—';
       const preDeliveryMonth = preDeliveryIso ? `${parseInt(preDeliveryIso.slice(5,7))}月` : month;
@@ -3392,7 +3704,7 @@ function openWkCapModal(supplier, mon){
     let totUsed=0;
     weeks.forEach((w, i)=>{
       const inW=inRecs.filter(r=>dateInIsoWeek(r.deliveryDate,w.start)).reduce((s,r)=>s+(r.remaining||0),0);
-      const plW=plRecs.filter(r=>dateInIsoWeek(r.preDeliveryDate||r.deliveryDate,w.start)).reduce((s,r)=>s+(r.purchase||0),0);
+      const plW=plRecs.filter(r=>dateInIsoWeek(r.preDeliveryIso||r.deliveryDate,w.start)).reduce((s,r)=>s+(r.purchase||0),0);
       const used=inW+plW; const rawRem=wkCaps[i]-used; const rem=Math.max(0,rawRem); const load=wkCaps[i]>0?used/wkCaps[i]:0;
       if(used<=0) return;
       totUsed+=used;

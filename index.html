@@ -198,6 +198,8 @@ td.num{text-align:right;}
 .tbl-scroll{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
 .tbl-scroll > table{margin:0;min-width:max-content;}
 .tbl-scroll thead th{position:sticky;top:0;background:var(--panel);z-index:3;box-shadow:inset 0 -1px 0 var(--line);}
+/* 合计行吸底常驻：长表滚到底部时自动可见 */
+.tbl-scroll tfoot td{position:sticky;bottom:0;z-index:3;}
 .wk-sum{font-weight:600;}
 .modal-legend{font-size:14px;color:var(--muted);margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
 .modal-legend .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle;}
@@ -692,7 +694,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="note" id="svNote"></div>
     <div class="kpis" id="svKpis"></div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:stretch;">
-      <div class="card" style="flex:1 1 240px;"><h3>现有产能负荷率 <span class="hint" id="svLoadHint"></span></h3><div class="donut-wrap"><div id="svDonut" style="flex:0 0 150px;"></div><div class="donut-info" id="svDonutInfo"></div></div></div>
+      <div class="card" style="flex:1 1 240px;"><h3>现有产能负荷率 <span class="hint" id="svLoadHint"></span></h3><div id="svLoadCards"></div><div class="donut-wrap" style="display:none;"><div id="svDonut"></div><div class="donut-info" id="svDonutInfo"></div></div></div>
       <div class="card" style="flex:2 1 320px;min-width:300px;"><h3>每周在途数据 <span class="hint">按 ISO 自然周分行</span></h3><div class="tbl-scroll" style="max-height:260px;"><table id="svWeekTbl"><thead><tr><th>周</th><th class="num">在途数量</th><th class="num">已收数量</th><th class="num">周产能</th><th class="num">已占用</th><th class="num">剩余产能</th><th class="num">SPU详情</th></tr></thead><tbody></tbody></table></div></div>
     </div>
     <div class="card card-full" style="margin-top:16px;">
@@ -706,6 +708,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="topbar">
       <div class="crumb">月度数据</div>
       <div class="imp">
+        <span style="font-size:13px;color:var(--muted)">供应商</span><select id="monSup" class="btn" style="padding:6px 10px;"></select>
+        <span id="monCoreTip" style="display:none;font-size:13px;color:var(--primary)">核心供应商组已开启 · 仅看 <b id="monCoreCnt">10</b> 家 <a href="#" id="monCoreClear" style="color:var(--primary)">清除</a></span>
         <span style="font-size:13px;color:var(--muted)">月份</span><select id="monMon" class="btn" style="padding:6px 10px;"></select>
       </div>
     </div>
@@ -1025,7 +1029,6 @@ function fillSupSel(sel, selected){
   suppliers.filter(s => supplierHasData(s.name)).sort((a,b)=> (b.hasPO?1:0)-(a.hasPO?1:0) || b.cap-a.cap).forEach(s=>{
     const o = document.createElement('option'); o.value = s.name; o.textContent = s.short || s.name; o.title = s.name; sel.appendChild(o);
   });
-  if (coreGroupOn) { sel.value = '⭐核心'; return; }
   sel.value = (cur && cur !== '全部' && Array.prototype.some.call(sel.options, o=>o.value===cur)) ? cur : '全部';
 }
 function fillMonSel(sel, selected){
@@ -1378,12 +1381,13 @@ function renderTotal(rows){
   let rec=0, rem=0, pur=0;
   for(const r of rows){ rec+=r.received; rem+=r.remaining; pur+=r.purchase; }
   const p = pur>0 ? (rec/pur*100) : 0;
+  window._tblTotals = {rec:fmt(rec), rem:fmt(rem), pur:fmt(pur)};
   tf.innerHTML = '<tr class="total-row">'
     + '<td></td><td></td><td></td><td></td>'
     + '<td class="num">'+fmt(rec)+'</td>'
     + '<td class="num">'+fmt(rem)+'</td>'
     + '<td class="num">'+fmt(pur)+'</td>'
-    + '<td class="pg-cell">'+pgCell(p)+'</td>'
+    + '<td></td>'
     + '<td></td><td></td><td></td><td></td><td></td><td></td>'
     + '</tr>';
 }
@@ -1428,6 +1432,9 @@ function autoSizeColumns(){
     for(let i=0;i<n;i++){ const s=String(vals[i]||''); let L=0; for(const ch of s) L += (ch.charCodeAt(0)>255?2:1); if(L>lens[i]) lens[i]=L; }
   }
   cols.forEach((th,i)=>{ const s=th.textContent.replace(/▾/g,'').trim(); let L=0; for(const ch of s) L+=(ch.charCodeAt(0)>255?2:1); if(L>lens[i]) lens[i]=L; });
+  /* 合计行数值通常远长于单行（如 163,443 vs 2,187）→ 一并计入列宽，避免被截断 */
+  const _tt = window._tblTotals;
+  if(_tt){ [_tt.rec,_tt.rem,_tt.pur].forEach((s,k)=>{ let L=0; for(const ch of String(s||'')) L+=(ch.charCodeAt(0)>255?2:1); L=Math.ceil(L*1.35); if(L>(lens[4+k]||0)) lens[4+k]=L; }); }
   const cg = document.querySelector('#tblCols');
   if(!cg) return;
   cg.innerHTML = cols.map((th,i)=>{
@@ -2274,7 +2281,50 @@ function wkNiceCeil(v){
 function wkCurSel(){
   const sEl = $('#wkSup'), mEl = $('#wkMonth');
   const sv = sEl ? sEl.value : '';
-  return { sup: (sv && sv!=='全部') ? sv : null, mon: (mEl && mEl.value) ? mEl.value : '全部月份' };
+  return { sup: (sv && sv!=='全部' && sv!=='⭐核心') ? sv : null, mon: (mEl && mEl.value) ? mEl.value : '全部月份' };
+}
+/* 供应商详情：产能负荷率指标卡（方案 C：三卡 + 迷你进度条） */
+function renderSvLoadCards(remNow, cap, capRemain, loadNow){
+  const host = document.getElementById('svLoadCards'); if(!host) return;
+  const pct = cap>0 ? Math.min(1, remNow/cap) : 0;
+  const rpct = cap>0 ? Math.max(0, Math.min(1, capRemain/cap)) : 0;
+  const over = loadNow>1;
+  const usedCol = over ? '#e03131' : '#8499A8';
+  function bar(w, color, bg){
+    return '<div style="height:6px;border-radius:3px;background:'+bg+';overflow:hidden;margin-top:8px;">'
+         + '<i style="display:block;height:100%;width:'+(w*100).toFixed(1)+'%;background:'+color+';border-radius:3px;"></i></div>';
+  }
+  host.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+    +   '<div style="flex:1 1 110px;min-width:0;background:var(--bg2);border-radius:10px;padding:10px 12px;">'
+    +     '<div style="font-size:13px;color:var(--muted)">剩余在途</div>'
+    +     '<div style="font-size:20px;font-weight:700;color:'+usedCol+'">'+fmt(remNow)+'</div>'
+    +     bar(pct, usedCol, '#DDD5C7')
+    +     '<div style="font-size:12px;color:var(--muted);margin-top:4px;">占有效产能 '+(pct*100).toFixed(1)+'%</div>'
+    +   '</div>'
+    +   '<div style="flex:1 1 110px;min-width:0;background:var(--bg2);border-radius:10px;padding:10px 12px;">'
+    +     '<div style="font-size:13px;color:var(--muted)">产能剩余</div>'
+    +     '<div style="font-size:20px;font-weight:700;color:'+(capRemain<0?'#e03131':'#5C7F5E')+'">'+fmt(capRemain)+'</div>'
+    +     bar(rpct, capRemain<0?'#e03131':'#7A9E7E', '#DDD5C7')
+    +     '<div style="font-size:12px;color:var(--muted);margin-top:4px;">'
+    +       (capRemain<0 ? '已超出产能' : '占有效产能 '+(rpct*100).toFixed(1)+'%') + '</div>'
+    +   '</div>'
+    +   '<div style="flex:1 1 110px;min-width:0;background:var(--bg2);border-radius:10px;padding:10px 12px;">'
+    +     '<div style="font-size:13px;color:var(--muted)">有效产能</div>'
+    +     '<div style="font-size:20px;font-weight:700;color:var(--ink)">'+fmt(cap)+'</div>'
+    +     bar(1, '#C9A86C', '#DDD5C7')
+    +     '<div style="font-size:12px;color:var(--muted);margin-top:4px;">月度可用产能</div>'
+    +   '</div>'
+    + '</div>';
+}
+/* 月度页：核心组状态提示 */
+function updateMonCoreTip(){
+  const tip = document.getElementById('monCoreTip'); if(!tip) return;
+  tip.style.display = coreGroupOn ? 'inline' : 'none';
+  const c = document.getElementById('monCoreCnt');
+  if(c) c.textContent = coreList.length;
+  const btn = document.getElementById('monCoreClear');
+  if(btn && !btn._bound){ btn._bound = 1; btn.onclick = function(e){ e.preventDefault(); toggleCoreGroup(false); }; }
 }
 /* 按 (供应商) 汇总：在途剩余收料 + 周计划数量 + SPU 集合 */
 function wkAgg(sup, mon){
@@ -2337,7 +2387,6 @@ function wkStackSvg(rows, title, tag){
     s += '<text x="'+cx.toFixed(1)+'" y="'+(yTop-6).toFixed(1)+'" font-size="11" font-weight="700" fill="#2C2C2C" text-anchor="middle">'+fmt(total)+'</text>';
     const nm = r.short.length>5 ? r.short.slice(0,5)+'…' : r.short;
     s += '<text x="'+cx.toFixed(1)+'" y="'+(padT+innerH+16)+'" font-size="11" fill="#2C2C2C" text-anchor="middle">'+escHtml(nm)+'</text>';
-    s += '<text x="'+cx.toFixed(1)+'" y="'+(padT+innerH+30)+'" font-size="11" fill="#8A8279" text-anchor="middle">'+r.spuSet.size+' SPU</text>';
     s += '</g>';
   });
   s += '</svg>';
@@ -2863,14 +2912,21 @@ function renderSupplierView(){
   const name = state.supplier;
   const mon = state.month;
   const box=$('#svKpis');
-  if(!name){ box.innerHTML='<div class="kpi"><div class="label">提示</div><div class="val" style="font-size:15px">请在右上角选择供应商</div></div>'; const d=$('#svDonut'); if(d) d.innerHTML=''; const d2=$('#svDonut2'); if(d2) d2.innerHTML=''; return; }
+  if(!name){
+    $('#svCrumb').textContent = '全部供应商 / ' + (mon || '全部月份');
+    box.innerHTML='<div class="kpi"><div class="label">提示</div><div class="val" style="font-size:15px">请在右上角选择供应商</div></div>';
+    ['#svDonut','#svDonut2','#svDonutInfo','#svLoadCards'].forEach(function(s){ var e=$(s); if(e) e.innerHTML=''; });
+    var _st=$('#svDetailTbl tbody'); if(_st) _st.innerHTML='<tr><td colspan="9" class="empty">请在右上角选择供应商</td></tr>';
+    var _wt=$('#svWeekTbl tbody'); if(_wt) _wt.innerHTML='<tr><td colspan="7" class="empty">请在右上角选择供应商</td></tr>';
+    return; }
   const cap=capOf(name);
   const now=agg(recsKind(name,mon,false)), sim=agg(recsKind(name,mon,true));
   const remNow=now.remaining, weeklyPur=sim.purchase; const loadNow=cap>0?remNow/cap:0;
-  renderDonutEl('svDonut', loadNow, '在途负荷率');
+  /* 方案 C：三张指标卡 + 迷你进度条（替换原环形图） */
   /* 区分"剩余在途数量"(未收料) 与 "产能剩余"(有效产能−已占用) —— 两者计算口径不同 */
   const capRemain = cap - remNow;
-  $('#svDonutInfo').innerHTML = '剩余在途 <b>'+fmt(remNow)+'</b> ｜ 有效产能 <b>'+fmt(cap)+'</b> ｜ 产能剩余 <b>'+fmt(capRemain)+'</b>';
+  renderSvLoadCards(remNow, cap, capRemain, loadNow);
+  const _lhi=$('#svLoadHint'); if(_lhi) _lhi.textContent = loadNow>1 ? ('超载 '+((loadNow-1)*100).toFixed(0)+'%') : (loadNow*100).toFixed(1)+'% 已占用';
   const spuCount = new Set(recsKind(name,mon,null).map(r=>r.spu||r.materialCode||'—')).size;
   const facRaw = capFactoryRaw(name), effRaw = capEffRaw(name);
   box.innerHTML=[
@@ -3453,6 +3509,8 @@ function weeklyCapList(cap, weeks){
 
 /* 月度数据页面渲染 */
 function renderMonthlyData(){
+  fillSupSel($('#monSup'), state.supplier);
+  updateMonCoreTip();
   fillMonSel($('#monMon'), state.month);
   const mon = state.month;
   const compareBox = $('#monCompareTable');
@@ -3758,6 +3816,7 @@ function bindFilter(selId, field, pageRender){
     if(pageRender) pageRender(); else render();
   });
 }
+bindFilter('#monSup','supplier', renderMonthlyData);
 bindFilter('#dtSup','supplier');
 bindFilter('#dtMon','month');
 bindFilter('#totalSup','supplier');

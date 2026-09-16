@@ -1676,7 +1676,7 @@ function renderInTransit(){
     if(!g.has(k)) g.set(k, []); g.get(k).push(r);
   }
   const rows = [...g.entries()].map(([k,v])=>({dd:k, recs:v, spuCount:new Set(v.map(r=>r.spu||r.materialCode||'—')).size, ...agg(v)}))
-    .sort((a,b)=> (a.dd==='—'?1:0)-(b.dd==='—'?1:0) || (a.dd<b.dd?-1:1));
+    .sort((a,b)=> ddCmp(a.dd, b.dd));
   const totRem = rows.reduce((s,r)=>s+r.remaining,0), totPur = rows.reduce((s,r)=>s+r.purchase,0);
   box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">SPU数量</th><th>详情</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
     + rows.map((r,i)=>`<tr><td>${r.dd||'—'}</td><td class="r">${r.spuCount}</td><td><a href="javascript:;" class="spu-count" data-gi="${i}">详情</a></td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
@@ -1697,7 +1697,7 @@ function renderInTransitNext(){
     if(!g.has(k)) g.set(k, []); g.get(k).push(r);
   }
   const rows = [...g.entries()].map(([k,v])=>({dd:k, recs:v, spuCount:new Set(v.map(r=>r.spu||r.materialCode||'—')).size, ...agg(v)}))
-    .sort((a,b)=> (a.dd==='—'?1:0)-(b.dd==='—'?1:0) || (a.dd<b.dd?-1:1));
+    .sort((a,b)=> ddCmp(a.dd, b.dd));
   const totRem = rows.reduce((s,r)=>s+r.remaining,0), totPur = rows.reduce((s,r)=>s+r.purchase,0);
   box.innerHTML = `<table class="mini"><thead><tr><th>交货日期</th><th class="r">SPU数量</th><th>详情</th><th class="r">在途</th><th class="r">采购订单数量</th><th>完成率</th></tr></thead><tbody>`
     + rows.map((r,i)=>`<tr><td>${r.dd||'—'}</td><td class="r">${r.spuCount}</td><td><a href="javascript:;" class="spu-count" data-gi="${i}">详情</a></td><td class="r">${fmt(r.remaining)}</td><td class="r">${fmt(r.purchase)}</td><td>${pgCell(r.completion*100)}</td></tr>`).join('')
@@ -2224,7 +2224,7 @@ function renderWeekly(){
         return true;
       });
     }
-    wkRows.sort((a,b)=>{ const da=a.preDeliveryDate||'', db=b.preDeliveryDate||''; if(da!==db) return da<db?-1:1; return (a.supplier||'').localeCompare(b.supplier||'','zh'); });
+    wkRows.sort((a,b)=> ddCmp(a.preDeliveryDate, b.preDeliveryDate) || (a.supplier||'').localeCompare(b.supplier||'','zh'));
     /* 按(供应商, SKU)聚合：明细下沉到 SKU 粒度（键=物料编码） */
     const skuMap = new Map();
     wkRows.forEach(r => {
